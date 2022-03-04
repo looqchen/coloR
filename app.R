@@ -10,18 +10,27 @@ ui <- fluidPage(
     titlePanel("coloR"),
     
     fluidRow(
-        column(6,
+        column(6, style = "background-color:#A7D70033",
                h4("Built-in Colors in R"),
                htmlOutput("header"),
                plotlyOutput("plot657", height="500px"),
                tableOutput("click")     
         ),
         
-        column(6,
+        column(6, style = "background-color:#E6E60033",
                h4("Color Palettes"),
-               sliderInput("numcol", label="Number of colors", min=1, max=20, value=5),
-               sliderInput("alpha", label="Opacity", min=0, max=1, value=1, step=0.1),
-               plotOutput("cpPlot", height="300px")
+               fluidRow(
+                   column(6,
+                          sliderInput("numcol", label="Number of colors", min=1, max=20, value=5)),
+                   column(6,
+                          sliderInput("alpha", label="Opacity", min=0, max=1, value=1, step=0.1))),
+               fluidRow(
+                   column(6,
+                          sliderInput("s", label="Saturation", min=0, max=1, value=1, step=0.1)),
+                   column(6,
+                          sliderInput("v", label="Value", min=0, max=1, value=1, step=0.1)),
+                   HTML("<i>Saturation and Value only apply to</i> <code>rainbow()</code>")),
+               plotlyOutput("cpPlot", height="200px")
         )
     )
     
@@ -75,14 +84,15 @@ server <- function(input, output, session) {
                       line = element_blank(),
                       text = element_blank(),
                       title = element_blank(),
-                      panel.background = element_blank(),
+                      panel.background = element_rect(fill="transparent"),
+                      plot.background = element_rect(fill="transparent"),
                       plot.margin=unit(c(0,0,0,0), "mm")),
-            tooltip="text") %>%
+            tooltip="text", source="plotly1") %>%
             layout(xaxis = list(autorange = TRUE),
                    yaxis = list(autorange = TRUE))
         
         output$click <- renderTable({
-            d <- event_data("plotly_click")
+            d <- event_data("plotly_click", source="plotly1")
             req(d)
             d <- d[1,1]
             out <- col[d, c("color","HEX","RGB","HSV")]
@@ -93,17 +103,20 @@ server <- function(input, output, session) {
         ggp
     })
     
-    output$cpPlot <- renderPlot({
+    output$cpPlot <- renderPlotly({
         nc <- input$numcol
         al <- input$alpha
+        sa <- input$s
+        va <- input$v
         xy <- expand_grid(x=1:5, y=1:nc)
-        col <- data.frame(xy, color= c(rainbow(nc,alpha=al),
+        col <- data.frame(xy, color= c(rainbow(nc,alpha=al,s=sa,v=va),
                                        heat.colors(nc,alpha=al),
                                        terrain.colors(nc,alpha=al),
                                        topo.colors(nc,alpha=al),
                                        cm.colors(nc,alpha=al)))
-        ggplot(col,aes(x=y,y=x, fill=color)) + 
-            geom_tile(colour="white",size=2, height=0.6)+ 
+        cp <- ggplotly(
+            ggplot(col,aes(x=y,y=x, fill=color)) + 
+            geom_tile(colour="white", size=0.8, height=0.8)+ 
             scale_fill_identity()+
             #scale_y_continuous()+
             scale_y_reverse(breaks=1:5,
@@ -114,8 +127,14 @@ server <- function(input, output, session) {
                   axis.text.y = element_text(face="bold",
                                              size=14),
                   title = element_blank(),
-                  panel.background = element_blank(),
+                  panel.background = element_rect(fill="transparent"),
+                  plot.background = element_rect(fill="transparent"),
                   plot.margin=unit(c(0,0,0,0), "mm"))
+        ) %>%
+            layout(xaxis = list(autorange = TRUE),
+                   yaxis = list(autorange = TRUE))
+        
+        cp
     })
     
 }
