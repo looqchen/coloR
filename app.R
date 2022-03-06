@@ -7,7 +7,9 @@ library(gplots) #for col2hex
 library(scales) #for col2hcl
 
 ui <- fluidPage(  
-    titlePanel("coloR"),
+    titlePanel(
+        HTML("<h1><small><b>COLO</b></small>R</h1>")
+    ),
     
     fluidRow(
         column(6, style = "background-color:#A7D70033",
@@ -55,7 +57,8 @@ server <- function(input, output, session) {
     })
     
     output$plot657 <- renderPlotly({
-        xy <- expand.grid(x=1:37,y=1:15)[1:555,]
+        #load("plot657.RData")
+        xy <- expand.grid(y=37:1,x=1:15)[1:555,]
         coll <- data.frame(t(rgb2hsv(unlist(col2rgb(colors())))),
                            o=1:657,
                            color=colors())
@@ -70,16 +73,17 @@ server <- function(input, output, session) {
                    RGB=apply(col2rgb(color),2,paste,collapse = ', ')) %>%
             mutate(HSV=apply(round(rgb2hsv(col2rgb(color)),3),
                              MARGIN=2, FUN=paste, collapse = ', '))
+        col$color <- as_factor(col$color)
         
         ggp <- ggplotly(
-            ggplot(col,aes(x=y,y=x, fill=color,
+            ggplot(col,aes(x=x,y=y,
                            text=paste('<b>Color</b>: ', color,
                                       '<br><b>HEX</b>: ', HEX,
                                       '<br><b>RGB</b>: ', RGB,
                                       '<br><b>HSV</b>: ', HSV))) + 
-                geom_tile(colour="white",size=0.5)+ 
-                scale_fill_manual(values = sort(col$color))+
-                scale_y_reverse(limits = c(37, 0))+
+                geom_tile(aes(fill=color),colour="white",size=0.5)+ 
+                scale_fill_identity()+
+                #scale_y_reverse(limits = c(37, 0))+
                 theme(legend.position = "none",
                       line = element_blank(),
                       text = element_blank(),
@@ -90,18 +94,17 @@ server <- function(input, output, session) {
             tooltip="text", source="plotly1") %>%
             layout(xaxis = list(autorange = TRUE),
                    yaxis = list(autorange = TRUE))
-        
-        output$click <- renderTable({
-            d <- event_data("plotly_click", source="plotly1")
-            req(d)
-            d <- d[1,1]
-            out <- col[d, c("color","HEX","RGB","HSV")]
-            colnames(out)[1] <- "Color"
-            out
-        }, colnames = T, rownames = F, hover = T)
-        
         ggp
     })
+    
+    output$click <- renderTable({
+        d <- event_data("plotly_click", source="plotly1")
+        req(d)
+        d <- d[1,1]+1
+        out <- col[d, c("color","HEX","RGB","HSV")]
+        colnames(out)[1] <- "Color"
+        out
+    }, colnames = T, rownames = F, hover = T)
     
     output$cpPlot <- renderPlotly({
         nc <- input$numcol
@@ -114,9 +117,10 @@ server <- function(input, output, session) {
                                        terrain.colors(nc,alpha=al),
                                        topo.colors(nc,alpha=al),
                                        cm.colors(nc,alpha=al)))
+        #col$color <- as_factor(col$color)
         cp <- ggplotly(
             ggplot(col,aes(x=y,y=x, fill=color)) + 
-            geom_tile(colour="white", size=0.8, height=0.8)+ 
+            geom_tile(colour="white", size=0.6, height=0.8)+ 
             scale_fill_identity()+
             #scale_y_continuous()+
             scale_y_reverse(breaks=1:5,
@@ -125,7 +129,7 @@ server <- function(input, output, session) {
                   line = element_blank(),
                   axis.text.x = element_blank(),
                   axis.text.y = element_text(face="bold",
-                                             size=14),
+                                             size=10),
                   title = element_blank(),
                   panel.background = element_rect(fill="transparent"),
                   plot.background = element_rect(fill="transparent"),
@@ -139,4 +143,4 @@ server <- function(input, output, session) {
     
 }
 
-shinyApp(ui, server)
+runApp(shinyApp(ui, server))
