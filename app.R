@@ -5,6 +5,7 @@ library(ggthemes)
 library(plotly)
 library(gplots) #for col2hex
 library(scales) #for col2hcl
+library(RColorBrewer)
 
 ui <- fluidPage(  
     tags$head(
@@ -31,20 +32,15 @@ ui <- fluidPage(
     navbarPage("",
     tabPanel("Base R",
     fluidRow(
-        column(6, style = "border: 0.3rem solid;
-               border-color:#53868B;
-               border-radius: 20px;
-               padding: 10px",
+        column(6, #style = "border: 0.3rem solid; border-color:#53868B; border-radius: 20px; padding: 10px",
                h4("Built-in Colors in R"),
                htmlOutput("header"),
                plotlyOutput("plot657", height="400px"),
                tableOutput("click")     
         ),
         
-        column(6, style="border: 0.3rem solid;
-               border-color:#53868B;
-               border-radius: 20px;
-               padding: 10px",
+        column(6, #style="border: 0.3rem solid; border-color:#53868B; border-radius: 20px; padding: 10px",
+               style = "border-left: double #CCCCCC;",
                h4("Color Palettes"),
                fluidRow(
                    column(6,
@@ -63,7 +59,40 @@ ui <- fluidPage(
     )
     ),
     
-    tabPanel("Color Space"),
+    tabPanel("RColorBrewer",
+             fluidRow(
+               column(5,
+                      radioButtons("colblind",
+                                   label="Color-blind friendly",
+                                   choices=c("No"=FALSE, "Yes"=TRUE),
+                                   inline = T),
+                      radioButtons("rcb_choose", 
+                                   label="Display Palettes", 
+                                   choices=c("All"="all",
+                                             "Diverge (max 11 colors)"="div",
+                                             "Qualitative (max 8~12 colors)"="qual",
+                                             "Sequential (max 9 colors)"="seq",
+                                             "Select one or more palettes"="one"
+                                             )),
+                      conditionalPanel(
+                        condition = "input.rcb_choose == 'one'",
+                        selectInput("selectone",
+                                    label="Select one or more palettes",
+                                    choices = rownames(brewer.pal.info),
+                                    multiple=TRUE),
+                        style = "background: #E5E5E5; border-radius: 3px;"
+                      ),
+                      sliderInput("numcol2", label="Number of colors", min=1, max=12, value=12),
+                      HTML("<h4>R code examples</h4>
+                           8 colors from the <i>YlGn</i> Palette:<br>
+                           <code>brewer_pal(palette='YlGn')(8)</code><br>
+                           5 colors from the 2nd of qualitative palettes, which is <i>Dark2</i>, in a reverse order:<br>
+                           <code>brewer_pal(type='seq', palette=2, direction=-1)(5)</code>")
+                      ),
+               column(7,
+                      plotOutput("rcb_plot", height="500px"))
+             )),
+    tabPanel("ColorSpace"),
     tags$style(HTML(".navbar-brand {display:none;}
                     .navbar-default {
                     background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
@@ -76,8 +105,8 @@ ui <- fluidPage(
                     .navbar-default .navbar-nav > .active > a:hover {
                     color: #555;
                     background-color: #1A1A1A1A;
-                    }"))
-    )
+                    }")),
+    collapsible = TRUE)
     # sidebarLayout(
     #     sidebarPanel(),
     #     mainPanel(
@@ -122,7 +151,7 @@ server <- function(input, output, session) {
                                       '<br><b>HEX</b>: ', HEX,
                                       '<br><b>RGB</b>: ', RGB,
                                       '<br><b>HSV</b>: ', HSV))) + 
-                geom_tile(aes(fill=color),colour="white",size=0.5)+ 
+                geom_tile(aes(fill=color),colour="grey80",size=0.2)+ 
                 scale_fill_identity()+
                 #scale_y_reverse(limits = c(37, 0))+
                 theme(legend.position = "none",
@@ -168,7 +197,7 @@ server <- function(input, output, session) {
         cp <- ggplotly(
             ggplot(col,aes(x=y,y=x, fill=color,
                            text=paste('<b>Color</b>: ', color))) + 
-            geom_tile(colour="white", size=0.6, height=0.8)+ 
+            geom_tile(colour="grey80", size=0.2, height=0.8)+ 
             scale_fill_identity()+
             #scale_y_continuous()+
             scale_y_reverse(breaks=1:5,
@@ -187,13 +216,29 @@ server <- function(input, output, session) {
                    yaxis = list(autorange = TRUE))
         
         output$colfuncode <- renderUI({
-          HTML("<b>R codes:</b><br>", paste("<code>",rfunc,"</code>",
-                     c(rep("<br>",4),""),sep="",collapse = ""))
+          HTML("<b>R codes:</b><br>", paste("<code>",rfunc,"</code><br>",sep="",collapse = ""))
         })
         
         cp
     })
     
+    output$rcb_plot <- renderPlot({
+      source("~/Documents/coloR/coloR/coloR_func.R")
+      if(input$rcb_choose=="one"){
+        typ <- "all"
+        cblind <- FALSE
+        slct <- input$selectone
+      }else{
+        typ <- input$rcb_choose
+        cblind <- FALSE
+        slct <- NULL
+      }
+      mydisplay.brewer.all(n=input$numcol2,
+                           type=typ,
+                           colorblindFriendly = input$colblind,
+                           select = slct,
+                           exact.n=F)
+    })
 }
 
 runApp(shinyApp(ui, server))
