@@ -7,23 +7,48 @@ library(gplots) #for col2hex
 library(scales) #for col2hcl
 
 ui <- fluidPage(  
-    titlePanel(
-        HTML("<h1><small><b>COLO</b></small>R</h1>")
+    tags$head(
+        # Note the wrapping of the string in HTML()
+        tags$style(HTML("
+      @import url('https://fonts.googleapis.com/css2?family=Carter+One&display=swap');
+      body {
+        background-color: white;
+        color: black;
+      }
+      h2 {
+        font-family: 'Carter One';
+        font-size: 60px;
+        background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00 5%, #53868B 10%, #FFAEB9);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .shiny-input-container {
+        color: #474747;
+      }"))
     ),
+    titlePanel("coloR"),
     
+    navbarPage("",
+    tabPanel("Base R",
     fluidRow(
-        column(6, style = "background-color:#A7D70033",
+        column(6, style = "border: 0.3rem solid;
+               border-color:#53868B;
+               border-radius: 20px;
+               padding: 10px",
                h4("Built-in Colors in R"),
                htmlOutput("header"),
-               plotlyOutput("plot657", height="500px"),
+               plotlyOutput("plot657", height="400px"),
                tableOutput("click")     
         ),
         
-        column(6, style = "background-color:#E6E60033",
+        column(6, style="border: 0.3rem solid;
+               border-color:#53868B;
+               border-radius: 20px;
+               padding: 10px",
                h4("Color Palettes"),
                fluidRow(
                    column(6,
-                          sliderInput("numcol", label="Number of colors", min=1, max=20, value=5)),
+                          sliderInput("numcol", label="Number of colors", min=1, max=20, value=10)),
                    column(6,
                           sliderInput("alpha", label="Opacity", min=0, max=1, value=1, step=0.1))),
                fluidRow(
@@ -31,12 +56,28 @@ ui <- fluidPage(
                           sliderInput("s", label="Saturation", min=0, max=1, value=1, step=0.1)),
                    column(6,
                           sliderInput("v", label="Value", min=0, max=1, value=1, step=0.1)),
-                   HTML("<i>Saturation and Value only apply to</i> <code>rainbow()</code>")),
-               plotlyOutput("cpPlot", height="200px")
+                   HTML("&nbsp;&nbsp;&nbsp;&nbsp;<i>Saturation and Value only apply to</i> <code>rainbow()</code>")),
+               plotlyOutput("cpPlot", height="200px"),
+               htmlOutput("colfuncode")
         )
     )
+    ),
     
-    
+    tabPanel("Color Space"),
+    tags$style(HTML(".navbar-brand {display:none;}
+                    .navbar-default {
+                    background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 18px;
+                    }
+                    .navbar-default .navbar-nav > .active > a,
+                    .navbar-default .navbar-nav > .active > a:focus,
+                    .navbar-default .navbar-nav > .active > a:hover {
+                    color: #555;
+                    background-color: #1A1A1A1A;
+                    }"))
+    )
     # sidebarLayout(
     #     sidebarPanel(),
     #     mainPanel(
@@ -58,7 +99,7 @@ server <- function(input, output, session) {
     
     output$plot657 <- renderPlotly({
         #load("plot657.RData")
-        xy <- expand.grid(y=37:1,x=1:15)[1:555,]
+        xy <- expand.grid(y=28:1,x=1:20)[1:555,]
         coll <- data.frame(t(rgb2hsv(unlist(col2rgb(colors())))),
                            o=1:657,
                            color=colors())
@@ -94,17 +135,20 @@ server <- function(input, output, session) {
             tooltip="text", source="plotly1") %>%
             layout(xaxis = list(autorange = TRUE),
                    yaxis = list(autorange = TRUE))
+        
+        output$click <- renderTable({
+          d <- event_data("plotly_click", source="plotly1")
+          req(d)
+          d <- d[1,1]+1
+          out <- col[d, c("color","HEX","RGB","HSV")]
+          colnames(out)[1] <- "Color"
+          out
+        }, colnames = T, rownames = F, hover = T)
+        
         ggp
     })
     
-    output$click <- renderTable({
-        d <- event_data("plotly_click", source="plotly1")
-        req(d)
-        d <- d[1,1]+1
-        out <- col[d, c("color","HEX","RGB","HSV")]
-        colnames(out)[1] <- "Color"
-        out
-    }, colnames = T, rownames = F, hover = T)
+
     
     output$cpPlot <- renderPlotly({
         nc <- input$numcol
@@ -117,9 +161,13 @@ server <- function(input, output, session) {
                                        terrain.colors(nc,alpha=al),
                                        topo.colors(nc,alpha=al),
                                        cm.colors(nc,alpha=al)))
+        rf <- c("rainbow", "heat.colors", "terrain.colors", "topoo.colors", "cm.colors")
+        rfunc <- paste(rf, "(", nc, ifelse(rf=="rainbow", paste(", s=",sa,", v=",va,sep=""),""), ", alpha=", al, ")", sep="")
+        
         #col$color <- as_factor(col$color)
         cp <- ggplotly(
-            ggplot(col,aes(x=y,y=x, fill=color)) + 
+            ggplot(col,aes(x=y,y=x, fill=color,
+                           text=paste('<b>Color</b>: ', color))) + 
             geom_tile(colour="white", size=0.6, height=0.8)+ 
             scale_fill_identity()+
             #scale_y_continuous()+
@@ -133,10 +181,15 @@ server <- function(input, output, session) {
                   title = element_blank(),
                   panel.background = element_rect(fill="transparent"),
                   plot.background = element_rect(fill="transparent"),
-                  plot.margin=unit(c(0,0,0,0), "mm"))
-        ) %>%
+                  plot.margin=unit(c(0,0,0,0), "mm")),
+            tooltip="text") %>%
             layout(xaxis = list(autorange = TRUE),
                    yaxis = list(autorange = TRUE))
+        
+        output$colfuncode <- renderUI({
+          HTML("<b>R codes:</b><br>", paste("<code>",rfunc,"</code>",
+                     c(rep("<br>",4),""),sep="",collapse = ""))
+        })
         
         cp
     })

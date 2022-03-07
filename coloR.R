@@ -35,3 +35,14 @@ ggp <- ggplotly(
          yaxis = list(autorange = TRUE))
 
 save(xy,col,ggp,file="plot657.RData")
+
+font-family: 'Carter One';
+font-size: 60px;
+background: -webkit-repeating-linear-gradient(left, #FFAEB9, #EEEE00 10%, #53868B 30%);
+                                              
+font-family: 'Sigmar One';
+font-size: 70px;
+background: -webkit-repeating-linear-gradient(left, #FFAEB9, #EEEE00 10%, #53868B 30%);
+                                              
+font-family: 'Press Start 2P';
+background: -webkit-repeating-linear-gradient(left, #FFAEB9, #EEEE00 10%, #53868B 20%);
