@@ -7,6 +7,7 @@ library(gplots) #for col2hex
 library(scales) #for col2hcl
 library(RColorBrewer)
 library(colorspace)
+library(shinyjs) #for hiding output
 
 ui <- fluidPage(  
   tags$head(
@@ -93,28 +94,30 @@ ui <- fluidPage(
                                plotOutput("rcb_plot", height="500px"))
                       )),
              tabPanel("ColorSpace",
-                      fluidRow(
-                        column(4#,
-                               # radioButtons("cspace_choose", 
-                               #              label="Display Palettes", 
-                               #              inline=T,
-                               #              choices=c("All"="all",
-                               #                        "Qualitative"="qualitative",
-                               #                        "Sequential (single-hue)"="sequential (single-hue)",
-                               #                        "Sequential (multi-hue)"="sequential (multi-hue)",
-                               #                        "Diverging"="diverging",
-                               #                        "Select one or more palettes"="one"
-                               #              ))
-                               ),
-                        column(4),
-                        column(4)
+                      div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
+                      div(style="display:inline-block",actionButton("cs_qual",label="Qualitative",style="font-size: 110%;")),
+                      div(style="display:inline-block",actionButton("cs_seq_sh",label="Sequential (single-hue)",style="font-size: 110%;")),
+                      div(style="display:inline-block",actionButton("cs_seq_mh",label="Sequential (multi-hue)",style="font-size: 110%;")),
+                      div(style="display:inline-block",actionButton("cs_div",label="Diverging",style="font-size: 110%;")),
+                      div(style="display:inline-block",actionButton("cs_select",label="Select one or more palettes",style="cfont-size: 110%;")),
+                      plotOutput("colorspaceplot", height = "500px"),
+                      conditionalPanel(condition="input.cs_select > 0",
+                                       column(4,
+                                              HTML("<br>"),
+                                              sliderInput("cs_numcol", label="Number of colors", min=1, max=20, value=5),
+                                              selectInput("cs_selectone",
+                                                          label="Select one or more palettes",
+                                                          choices = rownames(data.frame(hcl_palettes())),
+                                                          multiple=TRUE)),
+                                       column(8,
+                                              plotOutput("colorspaceplot2")))
+                      
                       ),
-                      plotOutput("colorspaceplot")),
              tags$style(HTML(".navbar-brand {display:none;}
                     .navbar-default {
                     background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
                     border: none;
-                    border-radius: 10px;
+                    border-radius: 3px;
                     font-size: 18px;
                     }
                     .navbar-default .navbar-nav > .active > a,
@@ -263,11 +266,36 @@ server <- function(input, output, session) {
                          exact.n=F)
   })
   
+  cs_action <- reactiveValues(tp=NULL,select=FALSE)
+  observeEvent(input$cs_all,{
+               cs_action$tp <- NULL
+               cs_action$select <- FALSE
+               })
+  observeEvent(input$cs_qual, {
+               cs_action$tp <- "qualitative"
+               cs_action$select=FALSE})
+  observeEvent(input$cs_seq_sh, {
+               cs_action$tp <- "sequential (single-hue)"
+               cs_action$select=FALSE})
+  observeEvent(input$cs_seq_mh, {
+               cs_action$tp <- "sequential (multi-hue)"
+               cs_action$select=FALSE})
+  observeEvent(input$cs_div, {
+               cs_action$tp <- "diverging"
+               cs_action$select=FALSE})
+  observeEvent(input$cs_select, {
+               cs_action$tp <- NULL
+               cs_action$select=TRUE})
+  
   output$colorspaceplot <- renderPlot({
-#    tp <- input$cspace_choose
-#    if(input$cspace_choose=="all"|input$cspace_choose=="selectone"){ tp <- NULL }
-    tp <- NULL
-    hcl_palettes(type=tp, plot=T)
+    hcl_palettes(type=cs_action$tp, plot=T)
+  })
+  
+  output$colorspaceplot2 <- renderPlot({
+    pnames <- input$cs_selectone
+    if(length(pnames)>0){
+      hcl_palettes(n=input$cs_numcol, palette=input$cs_selectone, plot=T)
+    }
   })
 }
 
