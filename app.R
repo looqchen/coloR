@@ -94,24 +94,34 @@ ui <- fluidPage(
                                plotOutput("rcb_plot", height="500px"))
                       )),
              tabPanel("ColorSpace",
-                      div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
-                      div(style="display:inline-block",actionButton("cs_qual",label="Qualitative",style="font-size: 110%;")),
-                      div(style="display:inline-block",actionButton("cs_seq_sh",label="Sequential (single-hue)",style="font-size: 110%;")),
-                      div(style="display:inline-block",actionButton("cs_seq_mh",label="Sequential (multi-hue)",style="font-size: 110%;")),
-                      div(style="display:inline-block",actionButton("cs_div",label="Diverging",style="font-size: 110%;")),
-                      div(style="display:inline-block",actionButton("cs_select",label="Select one or more palettes",style="cfont-size: 110%;")),
-                      plotOutput("colorspaceplot", height = "500px"),
-                      conditionalPanel(condition="input.cs_select > 0",
+                      # div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
+                      # div(style="display:inline-block",actionButton("cs_qual",label="Qualitative",style="font-size: 110%;")),
+                      # div(style="display:inline-block",actionButton("cs_seq_sh",label="Sequential (single-hue)",style="font-size: 110%;")),
+                      # div(style="display:inline-block",actionButton("cs_seq_mh",label="Sequential (multi-hue)",style="font-size: 110%;")),
+                      # div(style="display:inline-block",actionButton("cs_div",label="Diverging",style="font-size: 110%;")),
+                      # div(style="display:inline-block",actionButton("cs_select",label="Select one or more palettes",style="cfont-size: 110%;")),
+                      fluidRow(style="font-size: 110%; padding-left: 15px;",
+                        radioButtons("cs_choose", 
+                                   label=NULL, #"Display Palettes", 
+                                   choices=c("All"="cs_all",
+                                             "Qualitative"="qualitative",
+                                             "Sequential (single-hue)"="sequential (single-hue)",
+                                             "Sequential (multi-hue)"="sequential (multi-hue)",
+                                             "Diverging"="diverging",
+                                             "Select one or more palettes"="cs_select"
+                                   ), inline=T)),
+                      conditionalPanel(condition="input.cs_choose == 'cs_select'",
                                        column(4,
                                               HTML("<br>"),
                                               sliderInput("cs_numcol", label="Number of colors", min=1, max=20, value=5),
                                               selectInput("cs_selectone",
                                                           label="Select one or more palettes",
                                                           choices = rownames(data.frame(hcl_palettes())),
-                                                          multiple=TRUE)),
+                                                          multiple=TRUE),
+                                              htmlOutput("cs_code")),
                                        column(8,
-                                              plotOutput("colorspaceplot2")))
-                      
+                                              plotOutput("colorspaceplot2"))),
+                      plotOutput("colorspaceplot", height = "500px")
                       ),
              tags$style(HTML(".navbar-brand {display:none;}
                     .navbar-default {
@@ -125,7 +135,9 @@ ui <- fluidPage(
                     .navbar-default .navbar-nav > .active > a:hover {
                     color: #555;
                     background-color: #1A1A1A1A;
-                    }")),
+                    }
+                    input[type='radio'] {transform: scale(1.5);}
+                    input[type='radio']:checked+span {font-weight:bold;}")),
              collapsible = TRUE)
   # sidebarLayout(
   #     sidebarPanel(),
@@ -266,29 +278,17 @@ server <- function(input, output, session) {
                          exact.n=F)
   })
   
-  cs_action <- reactiveValues(tp=NULL,select=FALSE)
-  observeEvent(input$cs_all,{
-               cs_action$tp <- NULL
-               cs_action$select <- FALSE
-               })
-  observeEvent(input$cs_qual, {
-               cs_action$tp <- "qualitative"
-               cs_action$select=FALSE})
-  observeEvent(input$cs_seq_sh, {
-               cs_action$tp <- "sequential (single-hue)"
-               cs_action$select=FALSE})
-  observeEvent(input$cs_seq_mh, {
-               cs_action$tp <- "sequential (multi-hue)"
-               cs_action$select=FALSE})
-  observeEvent(input$cs_div, {
-               cs_action$tp <- "diverging"
-               cs_action$select=FALSE})
-  observeEvent(input$cs_select, {
-               cs_action$tp <- NULL
-               cs_action$select=TRUE})
   
   output$colorspaceplot <- renderPlot({
-    hcl_palettes(type=cs_action$tp, plot=T)
+    cs_tp <- NULL
+    if(input$cs_choose == "cs_all"){
+      cs_tp <- NULL
+    }else if(input$cs_choose == "cs_select"){
+      cs_tp <- NULL
+    }else{
+      cs_tp <- input$cs_choose
+    }
+    hcl_palettes(type=cs_tp, plot=T)
   })
   
   output$colorspaceplot2 <- renderPlot({
@@ -297,6 +297,20 @@ server <- function(input, output, session) {
       hcl_palettes(n=input$cs_numcol, palette=input$cs_selectone, plot=T)
     }
   })
+  
+  output$cs_code <- renderUI({
+    pnames <- input$cs_selectone
+    paldf <- data.frame(hcl_palettes())
+    cs_func <- NULL
+    if(length(pnames)>0){
+      tmp <- match(pnames,rownames(paldf))
+      paldf2 <- data.frame(x=tolower(as.character(paldf[sort(tmp),1])))
+      paldf2 <- suppressWarnings(paldf2 %>% separate(x, c("A","B")))[,1]
+      cs_func <- paste(paldf2, "_hcl(n = ", input$cs_numcol,", palette = '", pnames[order(tmp)], "')",sep="")
+    }
+    HTML("<b>R codes:</b><br>", paste("<code>",cs_func,"</code><br>",sep="",collapse = ""), "<br>")
+  })
+
 }
 
 shinyApp(ui, server)
