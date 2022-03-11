@@ -8,6 +8,7 @@ library(scales) #for col2hcl
 library(RColorBrewer)
 library(colorspace)
 library(shinyjs) #for hiding output
+library(ggsci)
 
 ui <- fluidPage(  
   tags$head(
@@ -123,6 +124,28 @@ ui <- fluidPage(
                                               plotOutput("colorspaceplot2"))),
                       plotOutput("colorspaceplot", height = "500px")
                       ),
+             tabPanel("More Palettes",
+                      navlistPanel(
+                        tabPanel("GGSCI",
+                                 sliderInput("ggsci_numcol",
+                                             label="Number of colors",
+                                             min=1,max=20,value=5),
+                                 plotOutput("ggsci_plot")),
+                        tabPanel("Component 2"),
+                        tabPanel("Component 3"),
+                        tabPanel("Component 4"),
+                        tabPanel("Component 6"),
+                        tabPanel("Component 7"),
+                        tabPanel("Component 8"),
+                        tabPanel("Component 9"),
+                        tabPanel("Component 10"),
+                        tabPanel("Component 11"),
+                        tabPanel("Component 12"),
+                        tabPanel("Component 13"),
+                        tabPanel("Component 14"),
+                        tabPanel("Component 15"),
+                        well=F, widths=c(3,9)
+                      )),
              tags$style(HTML(".navbar-brand {display:none;}
                     .navbar-default {
                     background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
@@ -137,16 +160,10 @@ ui <- fluidPage(
                     background-color: #1A1A1A1A;
                     }
                     input[type='radio'] {transform: scale(1.5);}
-                    input[type='radio']:checked+span {font-weight:bold;}")),
+                    input[type='radio']:checked+span {font-weight:bold;}
+                    input[type='checkbox'] {transform: scale(1.5);}
+                    input[type='checkbox']:checked+span {font-weight:bold;}")),
              collapsible = TRUE)
-  # sidebarLayout(
-  #     sidebarPanel(),
-  #     mainPanel(
-  #         htmlOutput("header"),
-  #         plotlyOutput("plot2"),
-  #         tableOutput("click")
-  #     )
-  # )
 )
 
 server <- function(input, output, session) {
@@ -208,9 +225,7 @@ server <- function(input, output, session) {
     
     ggp
   })
-  
-  
-  
+
   output$cpPlot <- renderPlotly({
     nc <- input$numcol
     al <- input$alpha
@@ -256,9 +271,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$colblind,{
     updateSelectInput(session,'selectone',
-                      choices=rownames(brewer.pal.info)[as.logical(brewer.pal.info$colorblind^input$colblind)])}
-    )
-
+                      choices=rownames(brewer.pal.info)[as.logical(brewer.pal.info$colorblind^input$colblind)])})
   
   output$rcb_plot <- renderPlot({
     source("coloR_func.R")
@@ -277,7 +290,6 @@ server <- function(input, output, session) {
                          select = slct,
                          exact.n=F)
   })
-  
   
   output$colorspaceplot <- renderPlot({
     cs_tp <- NULL
@@ -309,6 +321,12 @@ server <- function(input, output, session) {
       cs_func <- paste(paldf2, "_hcl(n = ", input$cs_numcol,", palette = '", pnames[order(tmp)], "')",sep="")
     }
     HTML("<b>R codes:</b><br>", paste("<code>",cs_func,"</code><br>",sep="",collapse = ""), "<br>")
+  })
+  
+  output$ggsci_plot <- renderPlot({
+    colsci <- sapply(ls("package:ggsci")[1:18], FUN=get)
+    colsci <- suppressWarnings(lapply(colsci, function(f) f()(input$ggsci_numcol)))
+
   })
 
 }
