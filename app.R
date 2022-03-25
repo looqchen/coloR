@@ -7,8 +7,9 @@ library(gplots) #for col2hex
 library(scales) #for col2hcl
 library(RColorBrewer)
 library(colorspace)
-library(shinyjs) #for hiding output
+#library(shinyjs) #for hiding output
 library(ggsci)
+library(ghibli)
 
 ui <- fluidPage(  
   tags$head(
@@ -96,11 +97,6 @@ ui <- fluidPage(
                       )),
              tabPanel("ColorSpace",
                       # div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
-                      # div(style="display:inline-block",actionButton("cs_qual",label="Qualitative",style="font-size: 110%;")),
-                      # div(style="display:inline-block",actionButton("cs_seq_sh",label="Sequential (single-hue)",style="font-size: 110%;")),
-                      # div(style="display:inline-block",actionButton("cs_seq_mh",label="Sequential (multi-hue)",style="font-size: 110%;")),
-                      # div(style="display:inline-block",actionButton("cs_div",label="Diverging",style="font-size: 110%;")),
-                      # div(style="display:inline-block",actionButton("cs_select",label="Select one or more palettes",style="cfont-size: 110%;")),
                       fluidRow(style="font-size: 110%; padding-left: 15px;",
                         radioButtons("cs_choose", 
                                    label=NULL, #"Display Palettes", 
@@ -126,43 +122,86 @@ ui <- fluidPage(
                       ),
              tabPanel("More Palettes",
                       navlistPanel(
+                        "Packages",
                         tabPanel("GGSCI",
-                                 sliderInput("ggsci_numcol",
-                                             label="Number of colors",
-                                             min=1,max=20,value=5),
-                                 plotOutput("ggsci_plot")),
-                        tabPanel("Component 2"),
-                        tabPanel("Component 3"),
-                        tabPanel("Component 4"),
-                        tabPanel("Component 6"),
-                        tabPanel("Component 7"),
-                        tabPanel("Component 8"),
-                        tabPanel("Component 9"),
-                        tabPanel("Component 10"),
-                        tabPanel("Component 11"),
-                        tabPanel("Component 12"),
-                        tabPanel("Component 13"),
-                        tabPanel("Component 14"),
-                        tabPanel("Component 15"),
-                        well=F, widths=c(3,9)
+                                 fluidRow(
+                                     column(6,
+                                            sliderInput("ggsci_numcol",
+                                                        label="Number of colors",
+                                                        min=1,max=20,value=5)),
+                                     column(6,
+                                            HTML("<b>R code examples</b><br>
+                                            <code>library(ggsci)</code><br>
+                                            <code>pal_aaas()(5)</code><br>
+                                            <code>pal_jama(alpha=0.5)(7)</code><br>
+                                            <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
+                                 ),
+                                 plotOutput("ggsci_plot", height="500px")),
+                        tabPanel("GHIBLI",
+                                 fluidRow(
+                                   column(2,
+                                          radioButtons("ghibli_type",
+                                                       label="Type",
+                                                       choices=c("Discrete"="dis","Continuous"="con"),
+                                                       selected="dis")),
+                                   column(4,
+                                          conditionalPanel(condition="input.ghibli_type == 'dis'",
+                                          sliderInput("ghibli_numcol",
+                                                      label="Number of colors",
+                                                      min=1,max=7,value=7))),
+                                   column(6,
+                                          HTML("<b>R code examples</b><br>
+                                            <code>library(ghibli)</code><br>
+                                            <code>pal_aaas()(5)</code><br>
+                                            <code>pal_jama(alpha=0.5)(7)</code><br>
+                                            <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
+                                 ),
+                                 plotOutput("ghibli_plot")),
+                        #("Component 3"),
+                        #tabPanel("Component 4"),
+                        #tabPanel("Component 6"),
+                        #tabPanel("Component 7"),
+                        #tabPanel("Component 8"),
+                        #tabPanel("Component 9"),
+                        #tabPanel("Component 10"),
+                        #tabPanel("Component 11"),
+                        #tabPanel("Component 12"),
+                        #tabPanel("Component 13"),
+                        #tabPanel("Component 14"),
+                        #tabPanel("Component 15"),
+                        well=T, widths=c(2,10)
                       )),
              tags$style(HTML(".navbar-brand {display:none;}
                     .navbar-default {
-                    background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
-                    border: none;
-                    border-radius: 3px;
-                    font-size: 18px;
+                        background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
+                        border: none;
+                        border-radius: 3px;
+                        font-size: 18px;
                     }
                     .navbar-default .navbar-nav > .active > a,
                     .navbar-default .navbar-nav > .active > a:focus,
                     .navbar-default .navbar-nav > .active > a:hover {
-                    color: #555;
-                    background-color: #1A1A1A1A;
+                        color: #555;
+                        background-color: #1A1A1A1A;
                     }
                     input[type='radio'] {transform: scale(1.5);}
                     input[type='radio']:checked+span {font-weight:bold;}
                     input[type='checkbox'] {transform: scale(1.5);}
-                    input[type='checkbox']:checked+span {font-weight:bold;}")),
+                    input[type='checkbox']:checked+span {font-weight:bold;}
+                  
+                    .nav.nav-pills.nav-stacked > li > a {
+                        padding: 7px 10px 7px 15px;
+                    }
+                    .nav.nav-pills.nav-stacked > .active > a,
+                    .nav.nav-pills.nav-stacked > .active > a:focus,
+                    .nav.nav-pills.nav-stacked > .active > a:hover {
+                        border-radius: 2px;
+                    }
+                    .well{
+                        border-radius: 3px;
+                        border: none;
+                        padding: 0 0 0 0;
+                    }")),
              collapsible = TRUE)
 )
 
@@ -324,9 +363,85 @@ server <- function(input, output, session) {
   })
   
   output$ggsci_plot <- renderPlot({
-    colsci <- sapply(ls("package:ggsci")[1:18], FUN=get)
-    colsci <- suppressWarnings(lapply(colsci, function(f) f()(input$ggsci_numcol)))
+    ncol <- input$ggsci_numcol
+    colfunc <- sapply(ggsci_func_names <- ls("package:ggsci")[1:18], FUN=get)
+    fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
+    opt.list <- sapply(ggsci_func_names, FUN=fx)
+    opt.num <- sapply(opt.list, FUN=length)
+    ggsci_func_namesU <- toupper(matrix(unlist(strsplit(ggsci_func_names,split="_")),ncol=2,byrow=T)[,2])
+    df <- data.frame(funcName=rep(ggsci_func_names,opt.num),
+                     Name=rep(ggsci_func_namesU,opt.num),
+                     Option=unlist(opt.list))
+    fxgetcol <- function(funcname, option){
+      suppressWarnings(get(funcname)(palette=option)(ncol))
+    }
+    df <- df %>%
+      add_column(wrap=rep(1:3,each=14)) %>%
+      rowwise() %>%
+      mutate(color = list(fxgetcol(funcName, Option)))
+    ggdf <- data.frame(y=rep(rep(14:1,3),each=ncol),
+                       x=rep(1:ncol,42),
+                       Name=rep(df$Name, each=ncol),
+                       Option=rep(df$Option, each=ncol),
+                       wrap=rep(df$wrap, each=ncol),
+                       Color=unlist(df$color))
+    ann_text <- df %>%
+      add_column(x=rep(0.5,42),
+                 y=rep(14:1,3),
+                 label=paste(df$Name,df$Option,sep="."))
 
+    ggplot(ggdf,aes(x=x,y=y)) + 
+      geom_tile(aes(fill=Color),height=0.6)+ 
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=ann_text,label=ann_text$label,hjust=0,vjust=-1.6)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+
+  })
+  
+  output$ghibli_plot <- renderPlot({
+    discon <- input$ghibli_type
+    # if(disdiv=="con"){
+    #   ncol <- 20
+    # }else if(disdiv=="dis"){
+    #   ncol <- input$ggsci_numcol
+    # }
+    ncol <- 7
+    gname <- names(ghibli_palettes)
+    ghdf <- data.frame(Palette=gname,
+                       x=rep(0.5,np),
+                       y=rep(9:1,each=3))
+    ghdf <- ghdf %>%
+      add_column(wrap=rep(1:3,9))
+    
+    np <- length(gname)
+    ggghdf <- data.frame(y=rep(9:1,each=ncol*3),
+                         x=rep(1:ncol,np),
+                         wrap=rep(ghdf$wrap,each=ncol),
+                         Color=as.character(unlist(ghibli_palettes)))
+    
+    ggplot(ggghdf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=ghdf,label=ghdf$Palette,hjust=0, nudge_y=0.5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
   })
 
 }

@@ -53,8 +53,7 @@ mydisplay.brewer.all <- function (n = NULL, type = "all", select = NULL, exact.n
   oldpar <- par(mgp = c(2, 0.25, 0))
   on.exit(par(oldpar))
   par(mar=c(0,3,0,0))
-  plot(1, 1, xlim = c(0, nc), ylim = rev(ylim), type = "n", axes = FALSE, 
-       bty = "n", xlab = "", ylab = "")
+  plot(1, 1, xlim = c(0, nc), ylim = rev(ylim), type = "n", axes = FALSE, bty = "n", xlab = "", ylab = "")
   for (i in 1:nr) {
     nj <- n[i]
     if (colorlist[i] == "") 
@@ -63,9 +62,10 @@ mydisplay.brewer.all <- function (n = NULL, type = "all", select = NULL, exact.n
     rect(xleft = 0:(nj - 1), ybottom = i - 1, xright = 1:nj, 
          ytop = i - 0.2, col = shadi, border = "grey80")
   }
-  text(rep(-0.1, nr), (1:nr) - 0.6, labels = colorlist, xpd = TRUE, 
-       adj = 1,col = "grey30")
+  text(rep(-0.1, nr), (1:nr) - 0.6, labels = colorlist, xpd = TRUE, adj = 1,col = "grey30")
 }
 environment(mydisplay.brewer.all) <- asNamespace('RColorBrewer')
 assignInNamespace("display.brewer.all", mydisplay.brewer.all, ns = "RColorBrewer")
 #mydisplay.brewer.all()
+
+#mydisplay.ggsci
