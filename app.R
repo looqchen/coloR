@@ -139,22 +139,18 @@ ui <- fluidPage(
                                  plotOutput("ggsci_plot", height="500px")),
                         tabPanel("GHIBLI",
                                  fluidRow(
-                                   column(2,
-                                          radioButtons("ghibli_type",
-                                                       label="Type",
-                                                       choices=c("Discrete"="dis","Continuous"="con"),
-                                                       selected="dis")),
-                                   column(4,
-                                          conditionalPanel(condition="input.ghibli_type == 'dis'",
+                                   column(3,
                                           sliderInput("ghibli_numcol",
                                                       label="Number of colors",
-                                                      min=1,max=7,value=7))),
-                                   column(6,
+                                                      min=1,max=15,value=7)),
+                                   column(9,
                                           HTML("<b>R code examples</b><br>
                                             <code>library(ghibli)</code><br>
-                                            <code>pal_aaas()(5)</code><br>
-                                            <code>pal_jama(alpha=0.5)(7)</code><br>
-                                            <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
+                                            <code>ghibli_palette('PonyoLight')
+</code><br>
+                                            <code>ghibli_palette('MarnieMedium2', 3)
+</code><br>
+                                            <code>ghibli_palette(name = 'YesterdayLight', n = 21, type = 'continuous')</code>"))
                                  ),
                                  plotOutput("ghibli_plot")),
                         #("Component 3"),
@@ -408,40 +404,71 @@ server <- function(input, output, session) {
   })
   
   output$ghibli_plot <- renderPlot({
-    discon <- input$ghibli_type
-    # if(disdiv=="con"){
-    #   ncol <- 20
-    # }else if(disdiv=="dis"){
-    #   ncol <- input$ggsci_numcol
-    # }
-    ncol <- 7
+    #discon <- input$ghibli_type
+    #if(discon=="con"){
+    #  ncol <- 50
+    #}else if(discon=="dis"){
+      ncol <- input$ghibli_numcol
+    #}
+    
     gname <- names(ghibli_palettes)
+    np <- length(gname)
     ghdf <- data.frame(Palette=gname,
                        x=rep(0.5,np),
                        y=rep(9:1,each=3))
     ghdf <- ghdf %>%
       add_column(wrap=rep(1:3,9))
     
-    np <- length(gname)
-    ggghdf <- data.frame(y=rep(9:1,each=ncol*3),
-                         x=rep(1:ncol,np),
-                         wrap=rep(ghdf$wrap,each=ncol),
-                         Color=as.character(unlist(ghibli_palettes)))
+    # if(discon=="con"){
+    #   ff <- function(x) c(ghibli_palette(x,n=ncol,type="continuous"))
+    #   ggghdf <- data.frame(y=rep(9:1,each=ncol*3),
+    #                        x=rep(1:ncol,np),
+    #                        wrap=rep(ghdf$wrap,each=ncol),
+    #                        Color=c(sapply(gname, FUN=ff)))
+    #   ggplot(ggghdf, aes(x=x,y=y))+
+    #     geom_tile(aes(fill=Color),height=0.6)+
+    #     scale_fill_identity()+
+    #     facet_wrap(~wrap)+
+    #     geom_text(data=ghdf,label=ghdf$Palette,hjust=0, nudge_y=0.5)+
+    #     theme(legend.position = "none",
+    #           line = element_blank(),
+    #           axis.text = element_blank(),
+    #           title = element_blank(),
+    #           strip.background = element_blank(),
+    #           strip.text.x = element_blank(),
+    #           panel.background = element_rect(fill="transparent"),
+    #           plot.background = element_rect(fill="transparent"),
+    #           plot.margin=unit(c(0,0,0,0), "mm"))
+    #}else if(discon=="dis"){
+      
+    if(ncol <= 7){
+      ggghdf <- data.frame(y=rep(9:1,each=ncol*3),
+                           x=rep(1:ncol,np),
+                           wrap=rep(ghdf$wrap,each=ncol),
+                           Color=c(sapply(ghibli_palettes, FUN=function(x){x[1:ncol]})))
+    }else{
+      ff <- function(x) c(ghibli_palette(x,n=ncol,type="continuous"))
+      ggghdf <- data.frame(y=rep(9:1,each=ncol*3),
+                           x=rep(1:ncol,np),
+                           wrap=rep(ghdf$wrap,each=ncol),
+                           Color=c(sapply(gname, FUN=ff)))
+    }
     
-    ggplot(ggghdf, aes(x=x,y=y))+
-      geom_tile(aes(fill=Color),height=0.6)+
-      scale_fill_identity()+
-      facet_wrap(~wrap)+
-      geom_text(data=ghdf,label=ghdf$Palette,hjust=0, nudge_y=0.5)+
-      theme(legend.position = "none",
-            line = element_blank(),
-            axis.text = element_blank(),
-            title = element_blank(),
-            strip.background = element_blank(),
-            strip.text.x = element_blank(),
-            panel.background = element_rect(fill="transparent"),
-            plot.background = element_rect(fill="transparent"),
-            plot.margin=unit(c(0,0,0,0), "mm"))
+      ggplot(ggghdf, aes(x=x,y=y))+
+        geom_tile(aes(fill=Color),height=0.6)+
+        scale_fill_identity()+
+        facet_wrap(~wrap)+
+        geom_text(data=ghdf,label=ghdf$Palette,hjust=0, nudge_y=0.5)+
+        theme(legend.position = "none",
+              line = element_blank(),
+              axis.text = element_blank(),
+              title = element_blank(),
+              strip.background = element_blank(),
+              strip.text.x = element_blank(),
+              panel.background = element_rect(fill="transparent"),
+              plot.background = element_rect(fill="transparent"),
+              plot.margin=unit(c(0,0,0,0), "mm"))
+    #}
   })
 
 }
