@@ -10,6 +10,7 @@ library(colorspace)
 #library(shinyjs) #for hiding output
 library(ggsci)
 library(ghibli)
+library(LaCroixColoR)
 
 ui <- fluidPage(  
   tags$head(
@@ -125,11 +126,11 @@ ui <- fluidPage(
                         "Packages",
                         tabPanel("GGSCI",
                                  fluidRow(
-                                     column(6,
+                                     column(4,
                                             sliderInput("ggsci_numcol",
                                                         label="Number of colors",
                                                         min=1,max=20,value=5)),
-                                     column(6,
+                                     column(8,
                                             HTML("<b>R code examples</b><br>
                                             <code>library(ggsci)</code><br>
                                             <code>pal_aaas()(5)</code><br>
@@ -139,11 +140,11 @@ ui <- fluidPage(
                                  plotOutput("ggsci_plot", height="500px")),
                         tabPanel("GHIBLI",
                                  fluidRow(
-                                   column(3,
+                                   column(4,
                                           sliderInput("ghibli_numcol",
                                                       label="Number of colors",
                                                       min=1,max=15,value=7)),
-                                   column(9,
+                                   column(8,
                                           HTML("<b>R code examples</b><br>
                                             <code>library(ghibli)</code><br>
                                             <code>ghibli_palette('PonyoLight')
@@ -153,8 +154,28 @@ ui <- fluidPage(
                                             <code>ghibli_palette(name = 'YesterdayLight', n = 21, type = 'continuous')</code>"))
                                  ),
                                  plotOutput("ghibli_plot")),
-                        #("Component 3"),
-                        #tabPanel("Component 4"),
+                        tabPanel("CANVA",
+                                 fluidRow(
+                                   column(4,
+                                          p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R code examples</b><br>
+                                            <code>library(ggthems)</code><br>
+                                            <code>canva_palettes</code><br>
+                                            <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
+                                 ),
+                                 plotOutput("canva_plot", height="800px")),
+                        tabPanel("NineteenEightyR",
+                                 fluidRow(
+                                   column(4,
+                                          p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R code examples</b><br>
+                                            <code>library(ggthems)</code><br>
+                                            <code>canva_palettes</code><br>
+                                            <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
+                                 ),
+                                 plotOutput("r1980_plot", height="800px")),
                         #tabPanel("Component 6"),
                         #tabPanel("Component 7"),
                         #tabPanel("Component 8"),
@@ -470,7 +491,41 @@ server <- function(input, output, session) {
               plot.margin=unit(c(0,0,0,0), "mm"))
     #}
   })
+  
+  output$canva_plot <- renderPlot({
+    ncol <- 4
+    canvaname <- names(canva_palettes)
+    np <- length(canvaname)
+    cl <- 6; rw <- 150/cl
+    canvadf <- data.frame(Palette=canvaname,
+                          x=rep(0.5,np),
+                          y=rep(rw:1,each=cl),
+                          wrap=rep(1:cl,rw))
+    ggcanvadf <- data.frame(y=rep(rw:1,each=ncol*cl),
+                            x=rep(1:ncol,np),
+                            wrap=rep(canvadf$wrap,each=ncol),
+                            Color=as.character(unlist(canva_palettes)))
+    canvap <- ggplot(ggcanvadf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_grid(.~wrap)+
+      geom_text(data=canvadf,label=canvadf$Palette,hjust=0, nudge_y=0.5, size=3)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+    canvap
+  })
 
+  output$r1980_plot <- renderPlot({
+    #r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+    
+  })
 }
 
 shinyApp(ui, server)
