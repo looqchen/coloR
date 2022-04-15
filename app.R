@@ -10,7 +10,8 @@ library(colorspace)
 #library(shinyjs) #for hiding output
 library(ggsci)
 library(ghibli)
-library(LaCroixColoR)
+#library(LaCroixColoR)
+library(NineteenEightyR)
 
 ui <- fluidPage(  
   tags$head(
@@ -160,7 +161,7 @@ ui <- fluidPage(
                                           p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
                                    column(8,
                                           HTML("<b>R code examples</b><br>
-                                            <code>library(ggthems)</code><br>
+                                            <code>library(ggthemes)</code><br>
                                             <code>canva_palettes</code><br>
                                             <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
                                  ),
@@ -168,15 +169,26 @@ ui <- fluidPage(
                         tabPanel("NineteenEightyR",
                                  fluidRow(
                                    column(4,
-                                          p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
+                                          p(strong("NineteenEightyR Palettes"), br(), "Colors inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a develomental version and can be installed via ", br(), code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end"))),
                                    column(8,
                                           HTML("<b>R code examples</b><br>
-                                            <code>library(ggthems)</code><br>
-                                            <code>canva_palettes</code><br>
-                                            <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
+                                            <code>library(NineteenEightyR)</code><br>
+                                            <code>youngturqs(n = 12, alpha = 1)</code><br>
+                                            <code>seventies_aint_done_yet(n = 5, alpha = 1)</code>"))
                                  ),
-                                 plotOutput("r1980_plot", height="800px")),
-                        #tabPanel("Component 6"),
+                                 plotOutput("r1980_plot", height="450px")),
+                        tabPanel("NORD",
+                                 fluidRow(
+                                   column(4,
+                                          sliderInput("nord_numcol",
+                                                      label="Number of colors",
+                                                      min=1,max=20,value=5)),
+                                   column(8,
+                                          HTML("<b>R code examples</b><br>
+                                            <code>library(nord)</code><br>
+                                            <code>nord(palette = 'aurora', n = 5)</code><br>
+                                            <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>"))),
+                                 plotOutput("nord_plot")),
                         #tabPanel("Component 7"),
                         #tabPanel("Component 8"),
                         #tabPanel("Component 9"),
@@ -523,8 +535,61 @@ server <- function(input, output, session) {
   })
 
   output$r1980_plot <- renderPlot({
-    #r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+    r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+    ny <- length(r1980_func)
+    nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
+    r1980df <- data.frame(y=ny:1,
+                          x=0,
+                          Palette=r1980_func_names)
+    ggr1980df <- data.frame(y=unlist(apply(data.frame(ny:1,nx),1,FUN=function(x) rep(x[1],x[2]))),
+                            x=unlist(sapply(nx, FUN=function(x) 1:x)),
+                            Color=unlist(sapply(r1980_func_names,FUN=function(x) get(x)())))
     
+    ggplot(ggr1980df, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.8)+
+      scale_fill_identity()+
+      geom_text(data=r1980df,label=r1980df$Palette,hjust=1, nudge_x=0.3,size=6)+
+      xlim(-4,12)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
+  output$nord_plot <- renderPlot({
+    ncol <- input$nord_numcol
+    nordnames <- names(nord_palettes)
+    np <- length(nordnames)
+    ny <- np/2
+    norddf <- data.frame(Palette=nordnames,
+                         x=rep(0.5,np),
+                         y=rep(ny:1,each=2),
+                         wrap=rep(1:2,ny))
+    ff <- function(x) nord(x,n=ncol)
+    ggnorddf <- data.frame(y=rep(ny:1,each=ncol*2),
+                         x=rep(1:ncol,np),
+                         wrap=rep(norddf$wrap,each=ncol),
+                         Color=c(sapply(nordnames, FUN=ff)))
+    
+    ggplot(ggnorddf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=norddf,label=norddf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
   })
 }
 
