@@ -12,6 +12,7 @@ library(ggsci)
 library(ghibli)
 #library(LaCroixColoR)
 library(NineteenEightyR)
+library(nord)
 
 ui <- fluidPage(  
   tags$head(
@@ -36,6 +37,32 @@ ui <- fluidPage(
   titlePanel("coloR"),
   
   navbarPage("",
+             tabPanel("About",
+                      style = "font-size: 12pt",
+                      p(strong("Welcome", style="color:#cb6318;font-size: 16pt"),
+                        strong("to", style="color:#7caa2d;font-size: 16pt"),
+                        strong("coloR", style="color:#34888c;font-size: 16pt"),
+                        strong("!", style="color:#f5e356;font-size: 20pt"),
+                        .noWS = c("after-begin", "before-end")),#hr(),
+                      p("This Shiny App intends to provide an comprehensive list of existing colors and palettes in R to help color picking in data visualization. It is in development and new contents are added everyday."),
+                      p("You may use the top menu bar to navigate through the following sections:"),
+                      tags$ul(
+                        tags$li(strong("Color Names"), p("This section lists 657 built-in colors in base R with their names, hex codes, RGB and HSV values.")), 
+                        tags$li(strong("Palettes"), p("This section includes popular color palettes packages available in R. They are",
+                           tags$ul(
+                             tags$li("grDevices: 5 palettes in base R, no package installation needed."),
+                             tags$li("Canva: 150 four-color palettes by the ", a(href="canva.com", "canva.com"), "design school, ", code("install.packages('ggthemes')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("ColorSpace: 97 palettes, ", code("install.packages('colorspace')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("GGSCI: 42 scientific journal and sci-fi themed palettes, ", code("install.packages('ggsci')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("GHIBLI: 27 palettes inspired by ", a(href="https://en.wikipedia.org/wiki/Studio_Ghibli","Studio Ghibli"), " films, ", code("install.packages('ghibli')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("NineteenEightyR: 12 palettes inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a developmental version and can be installed via", code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("NORD: 16 arctic, north-bluish color palettes, ", code("install.packages('nord')"), .noWS = c("after-begin", "before-end")),
+                             tags$li("RColorBrewer: 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
+                             
+                           ))), 
+                        tags$li(strong("Visualization"), p("In this section, you can visualize a color palette of your choice in different plot types, with options to view it in a black-white printing setting and color-blind scenarios."))
+                      )
+                      ),
              tabPanel("Base R",
                       fluidRow(
                         column(6, #style = "border: 0.3rem solid; border-color:#53868B; border-radius: 20px; padding: 10px",

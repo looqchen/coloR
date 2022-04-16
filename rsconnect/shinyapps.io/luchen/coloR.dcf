@@ -5,10 +5,10 @@ account: luchen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5800293
-bundleId: 5664834
+bundleId: 5802544
 url: https://luchen.shinyapps.io/coloR/
-when: 1646888388.42143
-lastSyncTime: 1646888388.42144
+when: 1650035591.52921
+lastSyncTime: 1650035591.52923
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: coloR.R|plot657.RData
+ignoredFiles: plot657.RData
