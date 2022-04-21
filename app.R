@@ -1,4 +1,7 @@
 library(shiny)
+{
+library(shinyWidgets)
+library(fontawesome)
 library(tidyverse)
 library(ggplot2)
 library(ggthemes)
@@ -13,11 +16,12 @@ library(ghibli)
 #library(LaCroixColoR)
 library(NineteenEightyR)
 library(nord)
+library(dichromat)
+}
 
 ui <- fluidPage(  
   tags$head(
-    # Note the wrapping of the string in HTML()
-    tags$style(HTML("
+    tags$style({HTML("
       @import url('https://fonts.googleapis.com/css2?family=Carter+One&display=swap');
       body {
         background-color: white;
@@ -32,12 +36,14 @@ ui <- fluidPage(
       }
       .shiny-input-container {
         color: #474747;
-      }"))
+      }")})
   ),
+  
   titlePanel("coloR"),
   
   navbarPage("",
-             tabPanel("About",
+             # About
+             {tabPanel("About",
                       style = "font-size: 12pt",
                       p(strong("Welcome", style="color:#cb6318;font-size: 16pt"),
                         strong("to", style="color:#7caa2d;font-size: 16pt"),
@@ -61,9 +67,10 @@ ui <- fluidPage(
                            ))), 
                         tags$li(strong("Visualization"), p("In this section, you can visualize a color palette of your choice in different plot types, with options to view it in a ", em("black-white printing", style="color:#34888c"), " setting and ", em("color-blind", style="color:#34888c"), " scenarios."),.noWS = c("after-begin", "before-end"))
                       )
-                      ),
+                      )},
+             
              tabPanel("Color Names",
-                      fluidRow(
+                      {fluidRow(
                         column(5,
                                br(),
                                h4("Built-in Colors in R"),
@@ -75,14 +82,14 @@ ui <- fluidPage(
                                tableOutput("click")),
                         column(7,
                                plotlyOutput("plot657", height="500px"))
-                      )),
+                      )}),
              
              tabPanel("Palettes",
                       navlistPanel(
                         "Packages",
                         
                         tabPanel("Base R",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(4,
                                      strong("Color palettes in base R"),
                                      sliderInput("numcol", label="Number of colors", min=1, max=20, value=10),
@@ -93,10 +100,10 @@ ui <- fluidPage(
                                    column(8,
                                           htmlOutput("colfuncode"),
                                           plotlyOutput("cpPlot", height="250px")
-                                   ))),
+                                   ))}),
                         
                         tabPanel("CANVA",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(4,
                                           p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
                                    column(8,
@@ -104,13 +111,13 @@ ui <- fluidPage(
                                             <code>library(ggthemes)</code><br>
                                             <code>canva_palettes</code><br>
                                             <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
-                                 ),
+                                 )},
                                  plotOutput("canva_plot", height="800px")),
                         
                         tabPanel("ColorSpace",
-                                 # div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
+                                 {# div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
                                  fluidRow(style="font-size: 110%; padding-left: 15px;",
-                                          radioButtons("cs_choose", 
+                                          prettyRadioButtons("cs_choose", 
                                                        label=NULL, #"Display Palettes", 
                                                        choices=c("All"="cs_all",
                                                                  "Qualitative"="qualitative",
@@ -118,23 +125,26 @@ ui <- fluidPage(
                                                                  "Sequential (multi-hue)"="sequential (multi-hue)",
                                                                  "Diverging"="diverging",
                                                                  "Select one or more palettes"="cs_select"
-                                                       ), inline=T)),
-                                 conditionalPanel(condition="input.cs_choose == 'cs_select'",
+                                                       ), inline=T))},
+                                 {conditionalPanel(condition="input.cs_choose == 'cs_select'",
                                                   column(4,
                                                          HTML("<br>"),
                                                          sliderInput("cs_numcol", label="Number of colors", min=1, max=20, value=5),
-                                                         selectInput("cs_selectone",
-                                                                     label="Select one or more palettes",
-                                                                     choices = rownames(data.frame(hcl_palettes())),
-                                                                     multiple=TRUE),
+                                                         selectInput(
+                                                           inputId = "cs_selectone",
+                                                           label = "Select one or more palettes", 
+                                                           choices = rownames(data.frame(hcl_palettes())),
+                                                           multiple = TRUE
+                                                         ),
+                                                         
                                                          htmlOutput("cs_code")),
                                                   column(8,
-                                                         plotOutput("colorspaceplot2"))),
+                                                         plotOutput("colorspaceplot2")))},
                                  plotOutput("colorspaceplot", height = "500px")
                         ),
                         
                         tabPanel("GGSCI",
-                                 fluidRow(
+                                 {fluidRow(
                                      column(4,
                                             sliderInput("ggsci_numcol",
                                                         label="Number of colors",
@@ -145,11 +155,11 @@ ui <- fluidPage(
                                             <code>pal_aaas()(5)</code><br>
                                             <code>pal_jama(alpha=0.5)(7)</code><br>
                                             <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
-                                 ),
+                                 )},
                                  plotOutput("ggsci_plot", height="500px")),
                         
                         tabPanel("GHIBLI",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(4,
                                           sliderInput("ghibli_numcol",
                                                       label="Number of colors",
@@ -162,11 +172,11 @@ ui <- fluidPage(
                                             <code>ghibli_palette('MarnieMedium2', 3)
 </code><br>
                                             <code>ghibli_palette(name = 'YesterdayLight', n = 21, type = 'continuous')</code>"))
-                                 ),
+                                 )},
                                  plotOutput("ghibli_plot")),
                         
                         tabPanel("NineteenEightyR",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(4,
                                           p(strong("NineteenEightyR Palettes"), br(), "Colors inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a develomental version and can be installed via ", br(), code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end"))),
                                    column(8,
@@ -174,11 +184,11 @@ ui <- fluidPage(
                                             <code>library(NineteenEightyR)</code><br>
                                             <code>youngturqs(n = 12, alpha = 1)</code><br>
                                             <code>seventies_aint_done_yet(n = 5, alpha = 1)</code>"))
-                                 ),
+                                 )},
                                  plotOutput("r1980_plot", height="450px")),
                         
                         tabPanel("NORD",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(4,
                                           sliderInput("nord_numcol",
                                                       label="Number of colors",
@@ -187,31 +197,39 @@ ui <- fluidPage(
                                           HTML("<b>R codes</b><br>
                                             <code>library(nord)</code><br>
                                             <code>nord(palette = 'aurora', n = 5)</code><br>
-                                            <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>"))),
+                                            <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>")))},
                                  plotOutput("nord_plot")),
                         
                         tabPanel("RColorBrewer",
-                                 fluidRow(
+                                 {fluidRow(
                                    column(5,
-                                          checkboxInput("colblind",
-                                                        label="Display color-blind friendly palettes only.",
-                                                        value=FALSE),
-                                          radioButtons("rcb_choose", 
-                                                       label="Display Palettes", 
-                                                       choices=c("All"="all",
-                                                                 "Diverging (max 11 colors)"="div",
-                                                                 "Qualitative (max 8~12 colors)"="qual",
-                                                                 "Sequential (max 9 colors)"="seq",
-                                                                 "Select one or more palettes"="one"
-                                                       )),
+                                          
+                                          prettySwitch(
+                                            inputId = "colblind",
+                                            label = "Color-blind friendly palettes only", 
+                                            status = "primary"
+                                          ),
+                                          prettyRadioButtons(
+                                            "rcb_choose", 
+                                            label="Display Palettes", 
+                                            choices=c("All"="all",
+                                                      "Diverging (max 11 colors)"="div",
+                                                      "Qualitative (max 8~12 colors)"="qual",
+                                                      "Sequential (max 9 colors)"="seq",
+                                                      "Select one or more palettes"="one"
+                                            ),
+                                            status="primary"
+                                          ),
+                                        
                                           conditionalPanel(
                                             condition = "input.rcb_choose == 'one'",
-                                            selectInput("selectone",
-                                                        label="Select one or more palettes",
-                                                        choices = rownames(brewer.pal.info),
-                                                        multiple=TRUE),
-                                            style = "background: #E5E5E5; border-radius: 3px;"
-                                          ),
+                                            selectInput(
+                                              inputId = "selectone",
+                                              label = "Select one or more palettes", 
+                                              choices = rownames(brewer.pal.info),
+                                              multiple = TRUE
+                                            )),
+                                            
                                           sliderInput("numcol2", label="Number of colors", min=1, max=12, value=12),
                                           HTML("<br><b>R codes</b><br>
                                           <code>library(RColorBrewer)</code><br>
@@ -220,7 +238,7 @@ ui <- fluidPage(
                                    ),
                                    column(7,
                                           plotOutput("rcb_plot", height="500px"))
-                                 )),
+                                 )}),
                         tabPanel("...More to come...",
                                  hr(),
                                  strong("More palettes to come:"),
@@ -249,9 +267,83 @@ ui <- fluidPage(
                       )),
              
              tabPanel("Visualization",
-                      h5("In development...")),
+                      {fluidRow(
+                        column(4,
+                          radioGroupButtons("plottype",
+                                            label="Type of plot",
+                                            choiceValues=c("barplot",
+                                                           "boxplot",
+                                                           "histogram",
+                                                           "scatterplot",
+                                                           "linechart",
+                                                           "map"),
+                                            choiceNames = list(icon("chart-bar"),
+                                                               icon("sliders-h",
+                                                                    "fa-rotate-90"),
+                                                               icon("chart-area"),
+                                                               icon("ellipsis-h",
+                                                                    "fa-rotate-135"),
+                                                               icon("chart-line"),
+                                                               icon("globe-americas")),
+                                            justified = F,
+                                            status = "primary",
+                                            individual = T),
+                          selectInput("package",
+                                      label="Choose a package",
+                                      choices=c("grDevices/Base R"="baser",
+                                                "Canva (ggthemes)"="canva",
+                                                "ColorSpace"="colorspace",
+                                                "GGSCI"="ggsci",
+                                                "GHIBLI"="ghibli",
+                                                "NineteenEightyR"="r1980",
+                                                "NORD"="nord",
+                                                "RColorBrewer"="rcolorbrewer"),
+                                      selected="canva"),
+                          
+                          pickerInput(
+                            inputId = "palette",
+                            label = "Choose a palette", 
+                            choices = letters[1:4],
+                            options = list(`live-search` = TRUE)
+                          ),
+                          selectInput("option",
+                                      label="Choose an option",
+                                      choices=c("None"="none")),
+                          sliderInput("visnumcol",
+                                      label="Number of colors to display",
+                                      min=2, max=10, value=4, step=1),
+                          htmlOutput("maxnum.message")
+                        ),
+                        column(
+                          8,
+                          column(3,
+                            prettyCheckboxGroup(
+                              inputId = "display",
+                              label = "Display", 
+                              choices = c("Black-white printing"="bw",
+                                          "Colorblindness"="cb"),
+                              status = "primary",
+                              inline = T,
+                              icon=icon("check")
+                            )),
+                          column(9,
+                            conditionalPanel(condition="input.display.includes('cb')",
+                            prettyRadioButtons(
+                              inputId = "colorblind",
+                              label = "Colorblindness",
+                              choices = c("Deuteranopia (green-blind)"="deutan",
+                                          "Protanopia (red blind)"="protan",
+                                          "Tritanopia (blue blind)"="tritan"),
+                              status = "primary",
+                              icon=icon("check"),
+                              inline=T
+                            ))),
+                          
+                          plotOutput("visplot",height="450px")
+                        )
+                      )}),
              
-             tags$style(HTML(".navbar-brand {display:none;}
+             tags$style({HTML(".navbar-brand {display:none;}
                     .navbar-default {
                         background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
                         border: none;
@@ -264,10 +356,18 @@ ui <- fluidPage(
                         color: #555;
                         background-color: #1A1A1A1A;
                     }
-                    input[type='radio'] {transform: scale(1.5);}
-                    input[type='radio']:checked+span {font-weight:bold;}
-                    input[type='checkbox'] {transform: scale(1.5);}
-                    input[type='checkbox']:checked+span {font-weight:bold;}
+                    
+                    .fa-rotate-135 {
+                    -webkit-transform: rotate(135deg);
+                    -moz-transform: rotate(135deg);
+                    -ms-transform: rotate(135deg);
+                    -o-transform: rotate(135deg);
+                    transform: rotate(135deg);
+                    }
+                    input[type='radio'] {transform: scale(1.2);}
+                    input[type='radio']:checked+span {color:#1e77c5; font-weight:bold;}
+                    input[type='checkbox'] {transform: scale(1.2);}
+                    input[type='checkbox']:checked+span {color:#1e77c5; font-weight:bold;}
                   
                     .nav.nav-pills.nav-stacked > li > a {
                         padding: 7px 10px 7px 15px;
@@ -281,7 +381,7 @@ ui <- fluidPage(
                         border-radius: 3px;
                         border: none;
                         padding: 0 0 0 0;
-                    }")),
+                    }")}),
              collapsible = TRUE)
 )
 
@@ -635,6 +735,97 @@ server <- function(input, output, session) {
             plot.background = element_rect(fill="transparent"),
             plot.margin=unit(c(0,0,0,0), "mm"))
   })
+  
+  ##Visualization
+  {
+  palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
+                   canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
+                   colorspace=rownames(data.frame(hcl_palettes())),
+                   ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
+                   ghibli=names(ghibli_palettes),
+                   r1980=ls("package:NineteenEightyR"),
+                   nord=names(nord_palettes),
+                   rcolorbrewer=rownames(brewer.pal.info))
+  
+  ggsci_func_names <- ls("package:ggsci")[1:18]
+  fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
+  opt.list <- sapply(ggsci_func_names, FUN=fx)
+  optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
+  my_theme <- list(theme_classic(),
+    theme(text = element_text(size = 16),
+          axis.line = element_line(colour = "grey70", 
+                                   size = 2, linetype = "solid")))
+  }
+  
+  observeEvent(input$package,{
+    updatePickerInput(session,'palette',
+                      choices=palettelist[input$package][[1]])})
+  
+  observeEvent(input$palette,{
+    if(input$palette %in% toupper(moreopt)){
+      updateSelectInput(session,'option',
+                        choices=optlist4[paste0("pal_", tolower(input$palette))][[1]])
+    }else{
+      updateSelectInput(session,'option',
+                        choices="None")
+    }
+    })
+    
+  output$visplot <- renderPlot({
+    ncol <- input$visnumcol
+    if(input$package=="baser"){
+      col <- get(input$palette)(n=ncol)
+    }else if(input$package=="canva"){
+      col <- canva_pal(palette = input$palette)(ncol)
+    }else if(input$package=="colorspace"){
+      col <- hcl.colors(n=ncol, palette=input$palette)
+    }else if(input$package=="ggsci"){
+      if(tolower(input$palette) %in% moreopt){
+        col <- get(paste0("pal_",tolower(input$palette)))(palette=input$option)(ncol)
+      }else{
+        col <- get(paste0("pal_",tolower(input$palette)))()(ncol)
+      }
+    }else if(input$package=="ghibli"){
+      col <- ghibli_palette(name=input$palette, n=ncol)
+    }else if(input$package=="r1980"){
+      col <- get(input$palette)(n=ncol)
+    }else if(input$package=="nord"){
+      col <- nord(palette=input$palette, n=ncol)
+    }else if(input$package=="rcolorbrewer"){
+      col <- brewer_pal(palette=input$palette)(ncol)
+    }
+    
+    if("cb" %in% input$display){
+      col <- dichromat(col, type=input$colorblind)
+    }
+    if("bw" %in% input$display){
+      col <- desaturate(col)
+    }
+    nncol <- length(col)
+    plottype <- input$plottype
+    if(plottype=="barplot"){
+      out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:nncol]),
+                    aes(cut))+
+        geom_bar(aes(fill=color), position=position_dodge())+
+        scale_fill_manual(values=col)+my_theme
+    }else if(plottype=="boxplot"){
+      
+    }else if(plottype=="histogram"){
+      
+    }else if(plottype=="scatterplot"){
+      
+    }else if(plottype=="line chart"){
+      
+    }else if(plottype=="map"){
+      
+    }
+    out
+  })
+  
+  output$maxnum.message <- renderUI({
+    #p("This palette has a maximum of ", 4, " colors", .noWS = c("after-begin", "before-end"))
+  })
+  
 }
 
 shinyApp(ui, server)
