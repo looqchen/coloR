@@ -17,6 +17,8 @@ library(ghibli)
 library(NineteenEightyR)
 library(nord)
 library(dichromat)
+library(gcookbook)
+library(maps)
 }
 
 ui <- fluidPage(  
@@ -65,8 +67,25 @@ ui <- fluidPage(
                              tags$li(a(href="https://cran.r-project.org/web/packages/nord/readme/README.html","NORD"),": 16 arctic, north-bluish color palettes, ", code("install.packages('nord')"), .noWS = c("after-begin", "before-end")),
                              tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
                            ))), 
-                        tags$li(strong("Visualization"), p("In this section, you can visualize a color palette of your choice in different plot types, with options to view it in a ", em("black-white printing", style="color:#34888c"), " setting and ", em("color-blind", style="color:#34888c"), " scenarios."),.noWS = c("after-begin", "before-end"))
-                      )
+                        tags$li(strong("Visualization"),
+                                p("In this section, you can visualize a color palette of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
+                                tags$ul(
+                                  tags$li("Bar plot"),
+                                  tags$li("Box plot"),
+                                  tags$li("Histogram"),
+                                  tags$li("Scatter plot"),
+                                  tags$li("Line chart"),
+                                  tags$li("Map")
+                                ),
+                                br(),
+                                p("with", strong("options"), "to view it in",.noWS = c("after-begin", "before-end")),
+                                tags$ul(
+                                  tags$li("Regular setting"),
+                                  tags$li("Black-white printing"),
+                                  tags$li("Color blindess: deuteranopia and protanopia (red-green color blindness), and tritanopia (green-blue color blindness)")
+                                )
+                      )),
+                      hr()
                       )},
              
              tabPanel("Color Names",
@@ -312,7 +331,8 @@ ui <- fluidPage(
                           sliderInput("visnumcol",
                                       label="Number of colors to display",
                                       min=2, max=10, value=4, step=1),
-                          htmlOutput("maxnum.message")
+                          htmlOutput("maxnum.message"),
+                          htmlOutput("map.message")
                         ),
                         column(
                           8,
@@ -339,11 +359,11 @@ ui <- fluidPage(
                               inline=T
                             ))),
                           
-                          plotOutput("visplot",height="450px")
+                          plotOutput("visplot", height="420px")
                         )
                       )}),
              
-             tags$style({HTML(".navbar-brand {display:none;}
+             tags$style({HTML(".navbar-brand {font-size:14px;font-style:italic;}
                     .navbar-default {
                         background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
                         border: none;
@@ -382,7 +402,7 @@ ui <- fluidPage(
                         border: none;
                         padding: 0 0 0 0;
                     }")}),
-             collapsible = TRUE)
+             collapsible = F)
 )
 
 server <- function(input, output, session) {
@@ -794,12 +814,15 @@ server <- function(input, output, session) {
     maxnumcol <- NA
     if(input$package=="baser"){
       col <- get(input$palette)(n=ncol)
-    }else if(input$package=="canva"){
+    }else 
+      if(input$package=="canva"){
       col <- canva_pal(palette = input$palette)(ncol)
       maxnumcol <- 4
-    }else if(input$package=="colorspace"){
+    }else 
+      if(input$package=="colorspace"){
       col <- hcl.colors(n=ncol, palette=input$palette)
-    }else if(input$package=="ggsci"){
+    }else 
+      if(input$package=="ggsci"){
       ggscipn <- paste0("pal_",tolower(input$palette))
       maxnumcol <- maxnumlist$ggsci[ggscipn][[1]]
       if(tolower(input$palette) %in% moreopt){
@@ -810,18 +833,22 @@ server <- function(input, output, session) {
       }else{
         col <- get(paste0("pal_",tolower(input$palette)))()(ncol)
       }
-    }else if(input$package=="ghibli"){
+    }else 
+      if(input$package=="ghibli"){
       if(ncol <=7){
         col <- ghibli_palette(name=input$palette, n=ncol)
       }else if(ncol > 7){
         col <- ghibli_palette(name=input$palette, n=ncol, type="continuous")
       }
-    }else if(input$package=="r1980"){
+    }else 
+      if(input$package=="r1980"){
       col <- get(input$palette)(n=ncol)
       maxnumcol <- maxnumlist$r1980[input$palette][[1]]
-    }else if(input$package=="nord"){
+    }else 
+      if(input$package=="nord"){
       col <- nord(palette=input$palette, n=ncol)
-    }else if(input$package=="rcolorbrewer"){
+    }else 
+      if(input$package=="rcolorbrewer"){
       col <- brewer_pal(palette=input$palette)(ncol)
       maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
     }
@@ -834,12 +861,15 @@ server <- function(input, output, session) {
     }
     nncol <- length(col)
     plottype <- input$plottype
+    
     if(plottype=="barplot"){
       out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:nncol]),
                     aes(cut))+
         geom_bar(aes(fill=color), position=position_dodge())+
         scale_fill_manual(values=col)+my_theme
-    }else if(plottype=="boxplot"){
+      
+    }else
+      if(plottype=="boxplot"){
       # updateSelectInput(session, "package",
       #                   selected="ghibli")
       # updatePickerInput(session, "palette",
@@ -847,27 +877,72 @@ server <- function(input, output, session) {
       # updateSliderInput(session, "visnumcol",
       #                   value=7)
       out <- ggplot(data=subset(diamonds,clarity %in% levels(diamonds$clarity)[1:nncol]),
-                    aes(carat>0.7, log(price), fill=clarity, color=clarity))+
+                    aes(carat>0.7, price, fill=clarity, color=clarity))+
         geom_boxplot(notch=T)+
+        scale_y_log10()+
         scale_x_discrete("Carat", labels=c(expression("Carat" <= "0.7"), "Carat > 0.7"))+
         scale_fill_manual(values=col)+
         scale_color_manual(values=darken(col, 0.4))+my_theme
-    }else if(plottype=="histogram"){
       
-    }else if(plottype=="scatterplot"){
+    }else 
+      if(plottype=="histogram"){
+      diamondsN <- diamonds %>% add_column(Carat=cut(diamonds$carat, breaks=c(-Inf, 0.4, 0.7, 1, Inf)))
+      out <- ggplot(data=subset(diamondsN, Carat %in% levels(diamondsN$Carat)[1:nncol]),
+                    aes(price, fill=Carat, color=Carat))+
+        geom_histogram(aes(y=..density..), position="identity", alpha=0.2, bins=50, size=1)+
+        geom_density(adjust=2,aes(color=Carat),alpha=0.5)+
+        scale_x_log10()+
+        scale_fill_manual(values=col,labels = c(expression(""<=0.4), "0.4~0.7", "0.7~1.0",expression("">1.0)))+
+        scale_color_manual(values=col,labels = c(expression(""<=0.4), "0.4~0.7", "0.7~1.0",expression("">1.0)))+my_theme
       
-    }else if(plottype=="line chart"){
+    }else 
+      if(plottype=="scatterplot"){
+      mpg$class <- factor(mpg$class, levels=sort(unique(mpg$class), decreasing =T))
+      out <- ggplot(data=subset(mpg, class %in% levels(mpg$class)[1:nncol]), aes(displ, hwy, fill=class, color = class)) +
+        geom_point(alpha=0.7, size=4)+
+        geom_smooth(se = FALSE, method = lm)+
+        scale_y_log10()+
+        scale_fill_manual(values=col,name="Class")+
+        scale_color_manual(values=col,name="Class")+my_theme+
+        ggtitle("Fuel Economy")+xlab("Engine Displacement")+
+        ylab("Highway Miles per Gallon")
       
-    }else if(plottype=="map"){
+    }else 
+      if(plottype=="linechart"){
+      out <- ggplot(data=subset(uspopage, AgeGroup %in% levels(uspopage$AgeGroup)[1:nncol]), aes(Year, Thousands, fill=AgeGroup, color=AgeGroup))+
+        geom_area(alpha=0.5,size=1)+
+        scale_fill_manual(values=col)+
+        scale_color_manual(values=col)+my_theme+
+        ggtitle("US Population by Age Groups")+
+        ylab("Population (in thousands)")
       
+    }else 
+      if(plottype=="map"){
+      arrests <- USArrests 
+      arrests$region <- tolower(rownames(USArrests))
+      states_map <- map_data("state")
+      arrests_map <- left_join(states_map, arrests, by = "region")
+      out <- ggplot(arrests_map, aes(long, lat, group = group))+
+        geom_polygon(aes(fill = Assault), color = "white")+
+        coord_fixed(ratio = 1.4)+
+        scale_fill_gradientn(colours=col)+theme_map(base_size=16)+
+        ggtitle("US Assault Arrests per 100,000 by State")+
+        ylab("Latitude")+xlab("Longitude")
     }
     
     output$maxnum.message <- renderUI({
       if(!is.na(maxnumcol)){
-        em("This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
+        em("-This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
       }
     })
     out
+  })
+  
+  output$map.message <- renderUI({
+    out <- ""
+    if(input$plottype=="map"){
+      out <- HTML("<i>-The <code>scale_fill_gradientn()</code> function in ggplot2 is used to creat an n-color gradient, where n is the chosen number of colors.</i>")
+    }
   })
   
 }
