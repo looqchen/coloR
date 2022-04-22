@@ -316,7 +316,7 @@ ui <- fluidPage(
                         ),
                         column(
                           8,
-                          column(3,
+                          column(4,
                             prettyCheckboxGroup(
                               inputId = "display",
                               label = "Display", 
@@ -326,14 +326,14 @@ ui <- fluidPage(
                               inline = T,
                               icon=icon("check")
                             )),
-                          column(9,
+                          column(8,
                             conditionalPanel(condition="input.display.includes('cb')",
                             prettyRadioButtons(
                               inputId = "colorblind",
                               label = "Colorblindness",
-                              choices = c("Deuteranopia (green-blind)"="deutan",
-                                          "Protanopia (red blind)"="protan",
-                                          "Tritanopia (blue blind)"="tritan"),
+                              choices = c("Deuteranopia (red-green blind)"="deutan",
+                                          "Protanopia (red-green blind)"="protan",
+                                          "Tritanopia (green-blue blind)"="tritan"),
                               status = "primary",
                               icon=icon("check"),
                               inline=T
@@ -677,7 +677,7 @@ server <- function(input, output, session) {
             plot.margin=unit(c(0,0,0,0), "mm"))
     canvap
   })
-
+  
   output$r1980_plot <- renderPlot({
     r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
     ny <- length(r1980_func)
@@ -693,7 +693,7 @@ server <- function(input, output, session) {
       geom_tile(aes(fill=Color),height=0.8)+
       scale_fill_identity()+
       geom_text(data=r1980df,label=r1980df$Palette,hjust=1, nudge_x=0.3,size=6)+
-      xlim(-4,12)+
+      xlim(-4,13)+
       theme(legend.position = "none",
             line = element_blank(),
             axis.text = element_blank(),
@@ -738,12 +738,14 @@ server <- function(input, output, session) {
   
   ##Visualization
   {
+  r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+  r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
   palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
                    canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
                    colorspace=rownames(data.frame(hcl_palettes())),
                    ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
                    ghibli=names(ghibli_palettes),
-                   r1980=ls("package:NineteenEightyR"),
+                   r1980=r1980_func_names,
                    nord=names(nord_palettes),
                    rcolorbrewer=rownames(brewer.pal.info))
   
@@ -751,7 +753,23 @@ server <- function(input, output, session) {
   fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
   opt.list <- sapply(ggsci_func_names, FUN=fx)
   optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
-  my_theme <- list(theme_classic(),
+  maxnumlist <- list(
+    baser=NA,
+    canva=4,
+    colorspace=NA,
+    ggsci=list(10,list(category10=10,category20=20,
+                       category20b=20,category20c=20),
+               12,12,list(default=51,alternating=2),
+               7,10,9,7,10,8,10,12,16,7,7,9,26),
+    r1980=r1980nx,
+    nord=NA,
+    rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
+  )
+  names(maxnumlist$ggsci) <- ggsci_func_names
+  names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
+  my_theme <- list(
+    ggtitle("Diamonds"),
+    theme_classic(),
     theme(text = element_text(size = 16),
           axis.line = element_line(colour = "grey70", 
                                    size = 2, linetype = "solid")))
@@ -770,29 +788,42 @@ server <- function(input, output, session) {
                         choices="None")
     }
     })
-    
+  
   output$visplot <- renderPlot({
     ncol <- input$visnumcol
+    maxnumcol <- NA
     if(input$package=="baser"){
       col <- get(input$palette)(n=ncol)
     }else if(input$package=="canva"){
       col <- canva_pal(palette = input$palette)(ncol)
+      maxnumcol <- 4
     }else if(input$package=="colorspace"){
       col <- hcl.colors(n=ncol, palette=input$palette)
     }else if(input$package=="ggsci"){
+      ggscipn <- paste0("pal_",tolower(input$palette))
+      maxnumcol <- maxnumlist$ggsci[ggscipn][[1]]
       if(tolower(input$palette) %in% moreopt){
-        col <- get(paste0("pal_",tolower(input$palette)))(palette=input$option)(ncol)
+        col <- get(ggscipn)(palette=input$option)(ncol)
+        if(input$palette %in% c("D3","IGV")){
+          maxnumcol <- maxnumcol[input$option]
+        }
       }else{
         col <- get(paste0("pal_",tolower(input$palette)))()(ncol)
       }
     }else if(input$package=="ghibli"){
-      col <- ghibli_palette(name=input$palette, n=ncol)
+      if(ncol <=7){
+        col <- ghibli_palette(name=input$palette, n=ncol)
+      }else if(ncol > 7){
+        col <- ghibli_palette(name=input$palette, n=ncol, type="continuous")
+      }
     }else if(input$package=="r1980"){
       col <- get(input$palette)(n=ncol)
+      maxnumcol <- maxnumlist$r1980[input$palette][[1]]
     }else if(input$package=="nord"){
       col <- nord(palette=input$palette, n=ncol)
     }else if(input$package=="rcolorbrewer"){
       col <- brewer_pal(palette=input$palette)(ncol)
+      maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
     }
     
     if("cb" %in% input$display){
@@ -809,7 +840,18 @@ server <- function(input, output, session) {
         geom_bar(aes(fill=color), position=position_dodge())+
         scale_fill_manual(values=col)+my_theme
     }else if(plottype=="boxplot"){
-      
+      # updateSelectInput(session, "package",
+      #                   selected="ghibli")
+      # updatePickerInput(session, "palette",
+      #                   selected="PonyoMedium")
+      # updateSliderInput(session, "visnumcol",
+      #                   value=7)
+      out <- ggplot(data=subset(diamonds,clarity %in% levels(diamonds$clarity)[1:nncol]),
+                    aes(carat>0.7, log(price), fill=clarity, color=clarity))+
+        geom_boxplot(notch=T)+
+        scale_x_discrete("Carat", labels=c(expression("Carat" <= "0.7"), "Carat > 0.7"))+
+        scale_fill_manual(values=col)+
+        scale_color_manual(values=darken(col, 0.4))+my_theme
     }else if(plottype=="histogram"){
       
     }else if(plottype=="scatterplot"){
@@ -819,11 +861,13 @@ server <- function(input, output, session) {
     }else if(plottype=="map"){
       
     }
+    
+    output$maxnum.message <- renderUI({
+      if(!is.na(maxnumcol)){
+        em("This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
+      }
+    })
     out
-  })
-  
-  output$maxnum.message <- renderUI({
-    #p("This palette has a maximum of ", 4, " colors", .noWS = c("after-begin", "before-end"))
   })
   
 }
