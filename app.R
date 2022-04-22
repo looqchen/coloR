@@ -131,7 +131,7 @@ ui <- fluidPage(
                                             <code>canva_palettes</code><br>
                                             <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
                                  )},
-                                 plotOutput("canva_plot", height="800px")),
+                                 plotOutput("canva_plot", height="800px"),value="canva"),
                         
                         tabPanel("ColorSpace",
                                  {# div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
@@ -282,7 +282,7 @@ ui <- fluidPage(
                         #tabPanel("Component 13"),
                         #tabPanel("Component 14"),
                         #tabPanel("Component 15"),
-                        well=T, widths=c(2,10)
+                        well=T, widths=c(2,10)#,selected = "canva"
                       )),
              
              tabPanel("Visualization",
@@ -330,7 +330,7 @@ ui <- fluidPage(
                                       choices=c("None"="none")),
                           sliderInput("visnumcol",
                                       label="Number of colors to display",
-                                      min=2, max=10, value=4, step=1),
+                                      min=2, max=7, value=4, step=1),
                           htmlOutput("maxnum.message"),
                           htmlOutput("map.message")
                         ),
@@ -363,7 +363,7 @@ ui <- fluidPage(
                         )
                       )}),
              
-             tags$style({HTML(".navbar-brand {font-size:14px;font-style:italic;}
+             tags$style({HTML(".navbar-brand {display:none;}
                     .navbar-default {
                         background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
                         border: none;
@@ -816,7 +816,7 @@ server <- function(input, output, session) {
       col <- get(input$palette)(n=ncol)
     }else 
       if(input$package=="canva"){
-      col <- canva_pal(palette = input$palette)(ncol)
+        suppressWarnings(col <- canva_pal(palette = input$palette)(ncol))
       maxnumcol <- 4
     }else 
       if(input$package=="colorspace"){
@@ -859,11 +859,21 @@ server <- function(input, output, session) {
     if("bw" %in% input$display){
       col <- desaturate(col)
     }
+    col <- col[!is.na(col)]
     nncol <- length(col)
+    if(nncol < ncol){
+      col <- colorRampPalette(col)(ncol)
+    }
     plottype <- input$plottype
     
+    if(plottype=="histogram"){
+      updateSliderInput(session, "visnumcol", max=4)
+    }else{
+      updateSliderInput(session, "visnumcol", max=7)
+    }
+    
     if(plottype=="barplot"){
-      out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:nncol]),
+      out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:ncol]),
                     aes(cut))+
         geom_bar(aes(fill=color), position=position_dodge())+
         scale_fill_manual(values=col)+my_theme
@@ -876,7 +886,7 @@ server <- function(input, output, session) {
       #                   selected="PonyoMedium")
       # updateSliderInput(session, "visnumcol",
       #                   value=7)
-      out <- ggplot(data=subset(diamonds,clarity %in% levels(diamonds$clarity)[1:nncol]),
+      out <- ggplot(data=subset(diamonds,clarity %in% levels(diamonds$clarity)[1:ncol]),
                     aes(carat>0.7, price, fill=clarity, color=clarity))+
         geom_boxplot(notch=T)+
         scale_y_log10()+
@@ -887,7 +897,7 @@ server <- function(input, output, session) {
     }else 
       if(plottype=="histogram"){
       diamondsN <- diamonds %>% add_column(Carat=cut(diamonds$carat, breaks=c(-Inf, 0.4, 0.7, 1, Inf)))
-      out <- ggplot(data=subset(diamondsN, Carat %in% levels(diamondsN$Carat)[1:nncol]),
+      out <- ggplot(data=subset(diamondsN, Carat %in% levels(diamondsN$Carat)[1:ncol]),
                     aes(price, fill=Carat, color=Carat))+
         geom_histogram(aes(y=..density..), position="identity", alpha=0.2, bins=50, size=1)+
         geom_density(adjust=2,aes(color=Carat),alpha=0.5)+
@@ -898,7 +908,7 @@ server <- function(input, output, session) {
     }else 
       if(plottype=="scatterplot"){
       mpg$class <- factor(mpg$class, levels=sort(unique(mpg$class), decreasing =T))
-      out <- ggplot(data=subset(mpg, class %in% levels(mpg$class)[1:nncol]), aes(displ, hwy, fill=class, color = class)) +
+      out <- ggplot(data=subset(mpg, class %in% levels(mpg$class)[1:ncol]), aes(displ, hwy, fill=class, color = class)) +
         geom_point(alpha=0.7, size=4)+
         geom_smooth(se = FALSE, method = lm)+
         scale_y_log10()+
@@ -909,7 +919,7 @@ server <- function(input, output, session) {
       
     }else 
       if(plottype=="linechart"){
-      out <- ggplot(data=subset(uspopage, AgeGroup %in% levels(uspopage$AgeGroup)[1:nncol]), aes(Year, Thousands, fill=AgeGroup, color=AgeGroup))+
+      out <- ggplot(data=subset(uspopage, AgeGroup %in% levels(uspopage$AgeGroup)[1:ncol]), aes(Year, Thousands, fill=AgeGroup, color=AgeGroup))+
         geom_area(alpha=0.5,size=1)+
         scale_fill_manual(values=col)+
         scale_color_manual(values=col)+my_theme+
@@ -931,9 +941,14 @@ server <- function(input, output, session) {
     }
     
     output$maxnum.message <- renderUI({
+      outm <- NULL
       if(!is.na(maxnumcol)){
-        em("-This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
-      }
+      if(maxnumcol >= 7){
+        outm <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
+      }else if(maxnumcol < 7){
+        outm <- out <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", br(), "-If the chosen number of colors is greater than ", maxnumcol, ", ", code("colorRampPalette()"), " will be used to generate the desired number of colors based on the palette.", .noWS = c("after-begin", "before-end"))
+      }}
+      outm
     })
     out
   })
