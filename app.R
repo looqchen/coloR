@@ -68,7 +68,7 @@ ui <- fluidPage(
                              tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
                            ))), 
                         tags$li(strong("Visualization"),
-                                p("In this section, you can visualize a color palette of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
+                                p("This section allows you to visualize a color palette of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
                                 tags$ul(
                                   tags$li("Bar plot"),
                                   tags$li("Box plot"),
@@ -307,33 +307,69 @@ ui <- fluidPage(
                                             justified = F,
                                             status = "primary",
                                             individual = T),
-                          selectInput("package",
-                                      label="Choose a package",
-                                      choices=c("grDevices/Base R"="baser",
-                                                "Canva (ggthemes)"="canva",
-                                                "ColorSpace"="colorspace",
-                                                "GGSCI"="ggsci",
-                                                "GHIBLI"="ghibli",
-                                                "NineteenEightyR"="r1980",
-                                                "NORD"="nord",
-                                                "RColorBrewer"="rcolorbrewer"),
-                                      selected="canva"),
-                          
-                          pickerInput(
-                            inputId = "palette",
-                            label = "Choose a palette", 
-                            choices = letters[1:4],
-                            options = list(`live-search` = TRUE)
+                          radioGroupButtons(
+                            inputId = "colorOrpalette",
+                            label = "Color",
+                            choices = c("Palettes"="pl",
+                                        "Color Names"="cn"),
+                            status = "primary",
+                            checkIcon = list(
+                              yes = icon("ok", 
+                                         lib = "glyphicon"),
+                              no = icon("remove",
+                                        lib = "glyphicon"))
                           ),
-                          selectInput("option",
-                                      label="Choose an option",
-                                      choices=c("None"="none")),
-                          sliderInput("visnumcol",
-                                      label="Number of colors to display",
-                                      min=2, max=7, value=4, step=1),
-                          htmlOutput("maxnum.message"),
+                          conditionalPanel(condition="input.colorOrpalette == 'pl'",
+                            selectInput("package",
+                                        label="Choose a package",
+                                        choices=c("grDevices/Base R"="baser",
+                                                  "Canva (ggthemes)"="canva",
+                                                  "ColorSpace"="colorspace",
+                                                  "GGSCI"="ggsci",
+                                                  "GHIBLI"="ghibli",
+                                                  "NineteenEightyR"="r1980",
+                                                  "NORD"="nord",
+                                                  "RColorBrewer"="rcolorbrewer"),
+                                        selected="canva"),
+                            pickerInput(
+                              inputId = "palette",
+                              label = "Choose a palette", 
+                              choices = "Shades of citrus",
+                              options = pickerOptions(`live-search` = TRUE,
+                                             `dropupAuto`=FALSE,
+                                             `maxOptions`=7)
+                            ),
+                            selectInput("option",
+                                        label="Choose an option",
+                                        choices=c("None"="none")),
+                            sliderInput("visnumcol",
+                                        label="Number of colors to display",
+                                        min=2, max=7, value=4, step=1),
+                            htmlOutput("maxnum.message")
+                            
+                            # circle=F, status="primary",width="100%",
+                            # icon=icon("palette"),label="Palettes",
+                            # tooltip = tooltipOptions(title = "Click to select a palette!")
+                          ),
+                          
+                          conditionalPanel(condition="input.colorOrpalette == 'cn'",
+                            selectizeInput(
+                              inputId = "selectcolor",
+                              label = "Select a set of colors", 
+                              choices = colors()[str_starts(colors(),"gray",negate=T)],
+                              multiple=TRUE,
+                              selected=c("lightskyblue1",
+                                         "steelblue1",
+                                         "steelblue3",
+                                         "steelblue4"),
+                              options=list(`maxItems`=7,
+                                           placeholder="Type here to search")
+                            ),
+                            htmlOutput("cn.message")
+                          ),
                           htmlOutput("map.message")
-                        ),
+                          ),
+                          
                         column(
                           8,
                           column(4,
@@ -757,59 +793,58 @@ server <- function(input, output, session) {
   })
   
   ##Visualization
-  {
-  r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
-  r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
-  palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
-                   canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
-                   colorspace=rownames(data.frame(hcl_palettes())),
-                   ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
-                   ghibli=names(ghibli_palettes),
-                   r1980=r1980_func_names,
-                   nord=names(nord_palettes),
-                   rcolorbrewer=rownames(brewer.pal.info))
-  
-  ggsci_func_names <- ls("package:ggsci")[1:18]
-  fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
-  opt.list <- sapply(ggsci_func_names, FUN=fx)
-  optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
-  maxnumlist <- list(
-    baser=NA,
-    canva=4,
-    colorspace=NA,
-    ggsci=list(10,list(category10=10,category20=20,
-                       category20b=20,category20c=20),
-               12,12,list(default=51,alternating=2),
-               7,10,9,7,10,8,10,12,16,7,7,9,26),
-    r1980=r1980nx,
-    nord=NA,
-    rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
-  )
-  names(maxnumlist$ggsci) <- ggsci_func_names
-  names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
-  my_theme <- list(
-    ggtitle("Diamonds"),
-    theme_classic(),
-    theme(text = element_text(size = 16),
-          axis.line = element_line(colour = "grey70", 
-                                   size = 2, linetype = "solid")))
-  }
-  
-  observeEvent(input$package,{
-    updatePickerInput(session,'palette',
-                      choices=palettelist[input$package][[1]])})
-  
-  observeEvent(input$palette,{
-    if(input$palette %in% toupper(moreopt)){
-      updateSelectInput(session,'option',
-                        choices=optlist4[paste0("pal_", tolower(input$palette))][[1]])
-    }else{
-      updateSelectInput(session,'option',
-                        choices="None")
-    }
-    })
-  
   output$visplot <- renderPlot({
+    plottype <- input$plottype
+    my_theme <- list(
+      ggtitle("Diamonds"),
+      theme_classic(),
+      theme(text = element_text(size = 16),
+            axis.line = element_line(colour = "grey70", 
+                                     size = 2, linetype = "solid")))
+    
+    if(input$colorOrpalette=="pl"){
+      r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+      r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
+      palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
+                          canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
+                          colorspace=rownames(data.frame(hcl_palettes())),
+                          ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
+                          ghibli=names(ghibli_palettes),
+                          r1980=r1980_func_names,
+                          nord=names(nord_palettes),
+                          rcolorbrewer=rownames(brewer.pal.info))
+      
+      ggsci_func_names <- ls("package:ggsci")[1:18]
+      fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
+      opt.list <- sapply(ggsci_func_names, FUN=fx)
+      optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
+      maxnumlist <- list(
+        baser=NA,
+        canva=4,
+        colorspace=NA,
+        ggsci=list(10,list(category10=10,category20=20,
+                           category20b=20,category20c=20),
+                   12,12,list(default=51,alternating=2),
+                   7,10,9,7,10,8,10,12,16,7,7,9,26),
+        r1980=r1980nx,
+        nord=NA,
+        rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
+      )
+      names(maxnumlist$ggsci) <- ggsci_func_names
+      names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
+      
+      observeEvent(input$package,{
+        updatePickerInput(session,'palette',
+                          choices=palettelist[input$package][[1]])})
+      observeEvent(input$palette,{
+        if(input$palette %in% toupper(moreopt)){
+          updateSelectInput(session,'option',
+                            choices=optlist4[paste0("pal_", tolower(input$palette))][[1]])
+        }else{
+          updateSelectInput(session,'option',
+                            choices="None")
+        }
+      })
     ncol <- input$visnumcol
     maxnumcol <- NA
     if(input$package=="baser"){
@@ -851,7 +886,41 @@ server <- function(input, output, session) {
       if(input$package=="rcolorbrewer"){
       col <- brewer_pal(palette=input$palette)(ncol)
       maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
+      }
+    col <- col[!is.na(col)]
+    nncol <- length(col)
+    if(nncol < ncol){
+      col <- colorRampPalette(col)(ncol)
     }
+    if(plottype=="histogram"){
+      updateSliderInput(session, "visnumcol", max=4)
+    }else{
+      updateSliderInput(session, "visnumcol", max=7)
+    }
+    output$maxnum.message <- renderUI({
+      outm <- NULL
+      if(!is.na(maxnumcol)){
+        if(maxnumcol >= 7){
+          outm <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
+        }else if(maxnumcol < 7){
+          outm <- out <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", br(), "-If the chosen number of colors is greater than ", maxnumcol, ", ", code("colorRampPalette()"), " will be used to generate the desired number of colors based on the palette.", .noWS = c("after-begin", "before-end"))
+        }}
+      outm
+    })
+    output$map.message <- renderUI({
+      out <- ""
+      if(input$plottype=="map"){
+        out <- HTML("<i>-The <code>scale_fill_gradientn()</code> function in ggplot2 is used to creat an n-color gradient, where n is the chosen number of colors.</i>")
+      }
+    })
+    }else
+      if(input$colorOrpalette=="cn"){
+        col <- input$selectcolor
+        ncol <- length(col)
+        output$cn.message <- renderUI({
+          em("-Type in the box to search for colors.",br(),"-At most 7 colors are allowed.")
+        })
+      }
     
     if("cb" %in% input$display){
       col <- dichromat(col, type=input$colorblind)
@@ -859,18 +928,7 @@ server <- function(input, output, session) {
     if("bw" %in% input$display){
       col <- desaturate(col)
     }
-    col <- col[!is.na(col)]
-    nncol <- length(col)
-    if(nncol < ncol){
-      col <- colorRampPalette(col)(ncol)
-    }
-    plottype <- input$plottype
     
-    if(plottype=="histogram"){
-      updateSliderInput(session, "visnumcol", max=4)
-    }else{
-      updateSliderInput(session, "visnumcol", max=7)
-    }
     
     if(plottype=="barplot"){
       out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:ncol]),
@@ -940,24 +998,7 @@ server <- function(input, output, session) {
         ylab("Latitude")+xlab("Longitude")
     }
     
-    output$maxnum.message <- renderUI({
-      outm <- NULL
-      if(!is.na(maxnumcol)){
-      if(maxnumcol >= 7){
-        outm <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", .noWS = c("after-begin", "before-end"))
-      }else if(maxnumcol < 7){
-        outm <- out <- em("-This palette has a maximum of ", strong(maxnumcol), " colors.", br(), "-If the chosen number of colors is greater than ", maxnumcol, ", ", code("colorRampPalette()"), " will be used to generate the desired number of colors based on the palette.", .noWS = c("after-begin", "before-end"))
-      }}
-      outm
-    })
     out
-  })
-  
-  output$map.message <- renderUI({
-    out <- ""
-    if(input$plottype=="map"){
-      out <- HTML("<i>-The <code>scale_fill_gradientn()</code> function in ggplot2 is used to creat an n-color gradient, where n is the chosen number of colors.</i>")
-    }
   })
   
 }
