@@ -44,246 +44,6 @@ ui <- fluidPage(
   titlePanel("coloR"),
   
   navbarPage("",
-             # About
-             {tabPanel("About",
-                      style = "font-size: 12pt",
-                      p(strong("Welcome", style="color:#cb6318;font-size: 16pt"),
-                        strong("to", style="color:#7caa2d;font-size: 16pt"),
-                        strong("coloR", style="color:#34888c;font-size: 16pt"),
-                        strong("!", style="color:#f5e356;font-size: 20pt"),
-                        .noWS = c("after-begin", "before-end")),#hr(),
-                      p("This Shiny App intends to provide an comprehensive list of existing colors and palettes in R to help color picking in data visualization. It is in development and new contents are added everyday."),
-                      p("You may use the top menu bar to navigate through the following sections:"),
-                      tags$ul(
-                        tags$li(strong("Color Names"), p("This section lists 657 built-in colors in base R with their names, HEX codes, RGB and HSV values.")), 
-                        tags$li(strong("Palettes"), p("This section includes popular color palettes packages available in R. They are",
-                           tags$ul(
-                             tags$li(a(href="https://cran.r-project.org/web/packages/RGraphics/index.html","grDevices"),": 5 palettes in base R, no package installation needed.",.noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://jrnold.github.io/ggthemes/reference/canva_palettes.html","Canva"),": 150 four-color palettes by the ", a(href="canva.com", "canva.com"), "design school, ", code("install.packages('ggthemes')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://cran.r-project.org/web/packages/colorspace/vignettes/colorspace.html","ColorSpace"),": 97 palettes, ", code("install.packages('colorspace')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html","GGSCI"),": 42 scientific journal and sci-fi themed palettes, ", code("install.packages('ggsci')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://cran.r-project.org/web/packages/ghibli/vignettes/ghibli.html","GHIBLI"),": 27 palettes inspired by ", a(href="https://en.wikipedia.org/wiki/Studio_Ghibli","Studio Ghibli"), " films, ", code("install.packages('ghibli')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://github.com/m-clark/NineteenEightyR","NineteenEightyR"),": 12 palettes inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a developmental version and can be installed via", code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://cran.r-project.org/web/packages/nord/readme/README.html","NORD"),": 16 arctic, north-bluish color palettes, ", code("install.packages('nord')"), .noWS = c("after-begin", "before-end")),
-                             tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
-                           ))), 
-                        tags$li(strong("Visualization"),
-                                p("This section allows you to visualize a color palette of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
-                                tags$ul(
-                                  tags$li("Bar plot"),
-                                  tags$li("Box plot"),
-                                  tags$li("Histogram"),
-                                  tags$li("Scatter plot"),
-                                  tags$li("Line chart"),
-                                  tags$li("Map")
-                                ),
-                                br(),
-                                p("with", strong("options"), "to view it in",.noWS = c("after-begin", "before-end")),
-                                tags$ul(
-                                  tags$li("Regular setting"),
-                                  tags$li("Black-white printing"),
-                                  tags$li("Color blindess: deuteranopia and protanopia (red-green color blindness), and tritanopia (green-blue color blindness)")
-                                )
-                      )),
-                      hr()
-                      )},
-             
-             tabPanel("Color Names",
-                      {fluidRow(
-                        column(5,
-                               br(),
-                               h4("Built-in Colors in R"),
-                               HTML("<b>R has 657 built in color names.</b><br>
-              Click each color to copy information.<br>
-              Select an area (brush) to zoom in.<br>
-              Use <code>alpha=</code> in <code>rgb()</code> and <code>hsv()</code> to customize the opacity of a specific color."),
-                               br(),br(),br(),
-                               tableOutput("click")),
-                        column(7,
-                               plotlyOutput("plot657", height="500px"))
-                      )}),
-             
-             tabPanel("Palettes",
-                      navlistPanel(
-                        "Packages",
-                        
-                        tabPanel("Base R",
-                                 {fluidRow(
-                                   column(4,
-                                     strong("Color palettes in base R"),
-                                     sliderInput("numcol", label="Number of colors", min=1, max=20, value=10),
-                                     sliderInput("alpha", label="Opacity", min=0, max=1, value=1, step=0.1),
-                                     sliderInput("s", label="Saturation", min=0, max=1, value=1, step=0.1),
-                                     sliderInput("v", label="Value", min=0, max=1, value=1, step=0.1),
-                                     HTML("<i>Saturation and Value only apply to</i> <code>rainbow()</code>")),
-                                   column(8,
-                                          htmlOutput("colfuncode"),
-                                          plotlyOutput("cpPlot", height="250px")
-                                   ))}),
-                        
-                        tabPanel("CANVA",
-                                 {fluidRow(
-                                   column(4,
-                                          p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
-                                   column(8,
-                                          HTML("<b>R codes</b><br>
-                                            <code>library(ggthemes)</code><br>
-                                            <code>canva_palettes</code><br>
-                                            <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
-                                 )},
-                                 plotOutput("canva_plot", height="800px"),value="canva"),
-                        
-                        tabPanel("ColorSpace",
-                                 {# div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
-                                 fluidRow(style="font-size: 110%; padding-left: 15px;",
-                                          prettyRadioButtons("cs_choose", 
-                                                       label=NULL, #"Display Palettes", 
-                                                       choices=c("All"="cs_all",
-                                                                 "Qualitative"="qualitative",
-                                                                 "Sequential (single-hue)"="sequential (single-hue)",
-                                                                 "Sequential (multi-hue)"="sequential (multi-hue)",
-                                                                 "Diverging"="diverging",
-                                                                 "Select one or more palettes"="cs_select"
-                                                       ), inline=T))},
-                                 {conditionalPanel(condition="input.cs_choose == 'cs_select'",
-                                                  column(4,
-                                                         HTML("<br>"),
-                                                         sliderInput("cs_numcol", label="Number of colors", min=1, max=20, value=5),
-                                                         selectInput(
-                                                           inputId = "cs_selectone",
-                                                           label = "Select one or more palettes", 
-                                                           choices = rownames(data.frame(hcl_palettes())),
-                                                           multiple = TRUE
-                                                         ),
-                                                         
-                                                         htmlOutput("cs_code")),
-                                                  column(8,
-                                                         plotOutput("colorspaceplot2")))},
-                                 plotOutput("colorspaceplot", height = "500px")
-                        ),
-                        
-                        tabPanel("GGSCI",
-                                 {fluidRow(
-                                     column(4,
-                                            sliderInput("ggsci_numcol",
-                                                        label="Number of colors",
-                                                        min=1,max=20,value=5)),
-                                     column(8,
-                                            HTML("<b>R codes</b><br>
-                                            <code>library(ggsci)</code><br>
-                                            <code>pal_aaas()(5)</code><br>
-                                            <code>pal_jama(alpha=0.5)(7)</code><br>
-                                            <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
-                                 )},
-                                 plotOutput("ggsci_plot", height="500px")),
-                        
-                        tabPanel("GHIBLI",
-                                 {fluidRow(
-                                   column(4,
-                                          sliderInput("ghibli_numcol",
-                                                      label="Number of colors",
-                                                      min=1,max=15,value=7)),
-                                   column(8,
-                                          HTML("<b>R codes</b><br>
-                                            <code>library(ghibli)</code><br>
-                                            <code>ghibli_palette('PonyoLight')
-</code><br>
-                                            <code>ghibli_palette('MarnieMedium2', 3)
-</code><br>
-                                            <code>ghibli_palette(name = 'YesterdayLight', n = 21, type = 'continuous')</code>"))
-                                 )},
-                                 plotOutput("ghibli_plot")),
-                        
-                        tabPanel("NineteenEightyR",
-                                 {fluidRow(
-                                   column(4,
-                                          p(strong("NineteenEightyR Palettes"), br(), "Colors inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a develomental version and can be installed via ", br(), code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end"))),
-                                   column(8,
-                                          HTML("<b>R codes</b><br>
-                                            <code>library(NineteenEightyR)</code><br>
-                                            <code>youngturqs(n = 12, alpha = 1)</code><br>
-                                            <code>seventies_aint_done_yet(n = 5, alpha = 1)</code>"))
-                                 )},
-                                 plotOutput("r1980_plot", height="450px")),
-                        
-                        tabPanel("NORD",
-                                 {fluidRow(
-                                   column(4,
-                                          sliderInput("nord_numcol",
-                                                      label="Number of colors",
-                                                      min=1,max=20,value=5)),
-                                   column(8,
-                                          HTML("<b>R codes</b><br>
-                                            <code>library(nord)</code><br>
-                                            <code>nord(palette = 'aurora', n = 5)</code><br>
-                                            <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>")))},
-                                 plotOutput("nord_plot")),
-                        
-                        tabPanel("RColorBrewer",
-                                 {fluidRow(
-                                   column(5,
-                                          
-                                          prettySwitch(
-                                            inputId = "colblind",
-                                            label = "Color-blind friendly palettes only", 
-                                            status = "primary"
-                                          ),
-                                          prettyRadioButtons(
-                                            "rcb_choose", 
-                                            label="Display Palettes", 
-                                            choices=c("All"="all",
-                                                      "Diverging (max 11 colors)"="div",
-                                                      "Qualitative (max 8~12 colors)"="qual",
-                                                      "Sequential (max 9 colors)"="seq",
-                                                      "Select one or more palettes"="one"
-                                            ),
-                                            status="primary"
-                                          ),
-                                        
-                                          conditionalPanel(
-                                            condition = "input.rcb_choose == 'one'",
-                                            selectInput(
-                                              inputId = "selectone",
-                                              label = "Select one or more palettes", 
-                                              choices = rownames(brewer.pal.info),
-                                              multiple = TRUE
-                                            )),
-                                            
-                                          sliderInput("numcol2", label="Number of colors", min=1, max=12, value=12),
-                                          HTML("<br><b>R codes</b><br>
-                                          <code>library(RColorBrewer)</code><br>
-                           <code>brewer_pal(palette='YlGn')(8)</code><br>
-                           <code>brewer_pal(type='seq', palette=2)(5)</code>")
-                                   ),
-                                   column(7,
-                                          plotOutput("rcb_plot", height="500px"))
-                                 )}),
-                        tabPanel("...More to come...",
-                                 hr(),
-                                 strong("More palettes to come:"),
-                                 tags$ul(
-                                   tags$li("ochRe"),
-                                   tags$li("palettetown"),
-                                   tags$li("Polychrome"),
-                                   tags$li("quickoalette"),
-                                   tags$li("rcartocolor"),
-                                   tags$li("redmonder"),
-                                   tags$li("RSkittleBrewer"),
-                                   tags$li("wesanderson"),
-                                   tags$li("yarr")
-                                 ),
-                                 hr()
-                                 ),
-                        #tabPanel("Component 8"),
-                        #tabPanel("Component 9"),
-                        #tabPanel("Component 10"),
-                        #tabPanel("Component 11"),
-                        #tabPanel("Component 12"),
-                        #tabPanel("Component 13"),
-                        #tabPanel("Component 14"),
-                        #tabPanel("Component 15"),
-                        well=T, widths=c(2,10)#,selected = "canva"
-                      )),
              
              tabPanel("Visualization",
                       {fluidRow(
@@ -314,10 +74,8 @@ ui <- fluidPage(
                                         "Color Names"="cn"),
                             status = "primary",
                             checkIcon = list(
-                              yes = icon("ok", 
-                                         lib = "glyphicon"),
-                              no = icon("remove",
-                                        lib = "glyphicon"))
+                              yes = tags$i(class = "fa fa-check-circle"),
+                              no = tags$i(class = "fa fa-circle-o"))
                           ),
                           conditionalPanel(condition="input.colorOrpalette == 'pl'",
                             selectInput("package",
@@ -398,6 +156,247 @@ ui <- fluidPage(
                           plotOutput("visplot", height="420px")
                         )
                       )}),
+             
+             tabPanel("Palettes",
+                      navlistPanel(
+                        "Packages",
+                        
+                        tabPanel("Base R",
+                                 {fluidRow(
+                                   column(4,
+                                          strong("Color palettes in base R"),
+                                          sliderInput("numcol", label="Number of colors", min=1, max=20, value=10),
+                                          sliderInput("alpha", label="Opacity", min=0, max=1, value=1, step=0.1),
+                                          sliderInput("s", label="Saturation", min=0, max=1, value=1, step=0.1),
+                                          sliderInput("v", label="Value", min=0, max=1, value=1, step=0.1),
+                                          HTML("<i>Saturation and Value only apply to</i> <code>rainbow()</code>")),
+                                   column(8,
+                                          htmlOutput("colfuncode"),
+                                          plotlyOutput("cpPlot", height="250px")
+                                   ))}),
+                        
+                        tabPanel("CANVA",
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(ggthemes)</code><br>
+                                            <code>canva_palettes</code><br>
+                                            <code>canva_pal(palette = 'Fresh and bright')(4)</code>"))
+                                 )},
+                                 plotOutput("canva_plot", height="800px"),value="canva"),
+                        
+                        tabPanel("ColorSpace",
+                                 {# div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
+                                   fluidRow(style="font-size: 110%; padding-left: 15px;",
+                                            prettyRadioButtons("cs_choose", 
+                                                               label=NULL, #"Display Palettes", 
+                                                               choices=c("All"="cs_all",
+                                                                         "Qualitative"="qualitative",
+                                                                         "Sequential (single-hue)"="sequential (single-hue)",
+                                                                         "Sequential (multi-hue)"="sequential (multi-hue)",
+                                                                         "Diverging"="diverging",
+                                                                         "Select one or more palettes"="cs_select"
+                                                               ), inline=T))},
+                                 {conditionalPanel(condition="input.cs_choose == 'cs_select'",
+                                                   column(4,
+                                                          HTML("<br>"),
+                                                          sliderInput("cs_numcol", label="Number of colors", min=1, max=20, value=5),
+                                                          selectInput(
+                                                            inputId = "cs_selectone",
+                                                            label = "Select one or more palettes", 
+                                                            choices = rownames(data.frame(hcl_palettes())),
+                                                            multiple = TRUE
+                                                          ),
+                                                          
+                                                          htmlOutput("cs_code")),
+                                                   column(8,
+                                                          plotOutput("colorspaceplot2")))},
+                                 plotOutput("colorspaceplot", height = "500px")
+                        ),
+                        
+                        tabPanel("GGSCI",
+                                 {fluidRow(
+                                   column(4,
+                                          sliderInput("ggsci_numcol",
+                                                      label="Number of colors",
+                                                      min=1,max=20,value=5)),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(ggsci)</code><br>
+                                            <code>pal_aaas()(5)</code><br>
+                                            <code>pal_jama(alpha=0.5)(7)</code><br>
+                                            <code>pal_uchicago('dark', alpha=0.7)(10)</code>"))
+                                 )},
+                                 plotOutput("ggsci_plot", height="500px")),
+                        
+                        tabPanel("GHIBLI",
+                                 {fluidRow(
+                                   column(4,
+                                          sliderInput("ghibli_numcol",
+                                                      label="Number of colors",
+                                                      min=1,max=15,value=7)),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(ghibli)</code><br>
+                                            <code>ghibli_palette('PonyoLight')
+</code><br>
+                                            <code>ghibli_palette('MarnieMedium2', 3)
+</code><br>
+                                            <code>ghibli_palette(name = 'YesterdayLight', n = 21, type = 'continuous')</code>"))
+                                 )},
+                                 plotOutput("ghibli_plot")),
+                        
+                        tabPanel("NineteenEightyR",
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("NineteenEightyR Palettes"), br(), "Colors inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a develomental version and can be installed via ", br(), code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(NineteenEightyR)</code><br>
+                                            <code>youngturqs(n = 12, alpha = 1)</code><br>
+                                            <code>seventies_aint_done_yet(n = 5, alpha = 1)</code>"))
+                                 )},
+                                 plotOutput("r1980_plot", height="450px")),
+                        
+                        tabPanel("NORD",
+                                 {fluidRow(
+                                   column(4,
+                                          sliderInput("nord_numcol",
+                                                      label="Number of colors",
+                                                      min=1,max=20,value=5)),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(nord)</code><br>
+                                            <code>nord(palette = 'aurora', n = 5)</code><br>
+                                            <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>")))},
+                                 plotOutput("nord_plot")),
+                        
+                        tabPanel("RColorBrewer",
+                                 {fluidRow(
+                                   column(5,
+                                          
+                                          prettySwitch(
+                                            inputId = "colblind",
+                                            label = "Color-blind friendly palettes only", 
+                                            status = "primary"
+                                          ),
+                                          prettyRadioButtons(
+                                            "rcb_choose", 
+                                            label="Display Palettes", 
+                                            choices=c("All"="all",
+                                                      "Diverging (max 11 colors)"="div",
+                                                      "Qualitative (max 8~12 colors)"="qual",
+                                                      "Sequential (max 9 colors)"="seq",
+                                                      "Select one or more palettes"="one"
+                                            ),
+                                            status="primary"
+                                          ),
+                                          
+                                          conditionalPanel(
+                                            condition = "input.rcb_choose == 'one'",
+                                            selectInput(
+                                              inputId = "selectone",
+                                              label = "Select one or more palettes", 
+                                              choices = rownames(brewer.pal.info),
+                                              multiple = TRUE
+                                            )),
+                                          
+                                          sliderInput("numcol2", label="Number of colors", min=1, max=12, value=12),
+                                          HTML("<br><b>R codes</b><br>
+                                          <code>library(RColorBrewer)</code><br>
+                           <code>brewer_pal(palette='YlGn')(8)</code><br>
+                           <code>brewer_pal(type='seq', palette=2)(5)</code>")
+                                   ),
+                                   column(7,
+                                          plotOutput("rcb_plot", height="500px"))
+                                 )}),
+                        tabPanel("...More to come...",
+                                 hr(),
+                                 strong("More palettes to come:"),
+                                 tags$ul(
+                                   tags$li("ochRe"),
+                                   tags$li("palettetown"),
+                                   tags$li("Polychrome"),
+                                   tags$li("quickoalette"),
+                                   tags$li("rcartocolor"),
+                                   tags$li("redmonder"),
+                                   tags$li("RSkittleBrewer"),
+                                   tags$li("wesanderson"),
+                                   tags$li("yarr")
+                                 ),
+                                 hr()
+                        ),
+                        #tabPanel("Component 8"),
+                        #tabPanel("Component 9"),
+                        #tabPanel("Component 10"),
+                        #tabPanel("Component 11"),
+                        #tabPanel("Component 12"),
+                        #tabPanel("Component 13"),
+                        #tabPanel("Component 14"),
+                        #tabPanel("Component 15"),
+                        well=T, widths=c(2,10)#,selected = "canva"
+                      )),
+             
+             tabPanel("Color Names",
+                      {fluidRow(
+                        column(5,
+                               br(),
+                               h4("Built-in Colors in R"),
+                               HTML("<b>R has 657 built in color names.</b><br>
+              Click each color to copy information.<br>
+              Select an area (brush) to zoom in.<br>
+              Use <code>alpha=</code> in <code>rgb()</code> and <code>hsv()</code> to customize the opacity of a specific color."),
+                               br(),br(),br(),
+                               tableOutput("click")),
+                        column(7,
+                               plotlyOutput("plot657", height="500px"))
+                      )}),
+             
+             # About
+             {tabPanel("About",
+                       style = "font-size: 12pt",
+                       p(strong("Welcome", style="color:#cb6318;font-size: 16pt"),
+                         strong("to", style="color:#7caa2d;font-size: 16pt"),
+                         strong("coloR", style="color:#34888c;font-size: 16pt"),
+                         strong("!", style="color:#f5e356;font-size: 20pt"),
+                         .noWS = c("after-begin", "before-end")),#hr(),
+                       p("This Shiny App intends to provide an comprehensive list of existing colors and palettes in R to help color picking in data visualization. It is in development and new contents are added everyday."),
+                       p("You may use the top menu bar to navigate through the following sections:"),
+                       tags$ul(
+                         tags$li(strong("Color Names"), p("This section lists 657 built-in colors in base R with their names, HEX codes, RGB and HSV values.")), 
+                         tags$li(strong("Palettes"), p("This section includes popular color palettes packages available in R. They are",
+                                                       tags$ul(
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/RGraphics/index.html","grDevices"),": 5 palettes in base R, no package installation needed.",.noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://jrnold.github.io/ggthemes/reference/canva_palettes.html","Canva"),": 150 four-color palettes by the ", a(href="canva.com", "canva.com"), "design school, ", code("install.packages('ggthemes')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/colorspace/vignettes/colorspace.html","ColorSpace"),": 97 palettes, ", code("install.packages('colorspace')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html","GGSCI"),": 42 scientific journal and sci-fi themed palettes, ", code("install.packages('ggsci')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/ghibli/vignettes/ghibli.html","GHIBLI"),": 27 palettes inspired by ", a(href="https://en.wikipedia.org/wiki/Studio_Ghibli","Studio Ghibli"), " films, ", code("install.packages('ghibli')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://github.com/m-clark/NineteenEightyR","NineteenEightyR"),": 12 palettes inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a developmental version and can be installed via", code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/nord/readme/README.html","NORD"),": 16 arctic, north-bluish color palettes, ", code("install.packages('nord')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
+                                                       ))), 
+                         tags$li(strong("Visualization"),
+                                 p("This section allows you to visualize a color palette or a set of colors of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
+                                 tags$ul(
+                                   tags$li("Bar plot"),
+                                   tags$li("Box plot"),
+                                   tags$li("Histogram"),
+                                   tags$li("Scatter plot"),
+                                   tags$li("Line chart"),
+                                   tags$li("Map")
+                                 ),
+                                 br(),
+                                 p("with", strong("options"), "to view it in",.noWS = c("after-begin", "before-end")),
+                                 tags$ul(
+                                   tags$li("Regular setting"),
+                                   tags$li("Black-white printing"),
+                                   tags$li("Color blindess: deuteranopia and protanopia (red-green color blindness), and tritanopia (green-blue color blindness)")
+                                 )
+                         )),
+                       hr()
+             )},
              
              tags$style({HTML(".navbar-brand {display:none;}
                     .navbar-default {
@@ -793,58 +792,60 @@ server <- function(input, output, session) {
   })
   
   ##Visualization
+  r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
+  r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
+  palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
+                      canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
+                      colorspace=rownames(data.frame(hcl_palettes())),
+                      ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
+                      ghibli=names(ghibli_palettes),
+                      r1980=r1980_func_names,
+                      nord=names(nord_palettes),
+                      rcolorbrewer=rownames(brewer.pal.info))
+  
+  ggsci_func_names <- ls("package:ggsci")[1:18]
+  fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
+  opt.list <- sapply(ggsci_func_names, FUN=fx)
+  optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
+  maxnumlist <- list(
+    baser=NA,
+    canva=4,
+    colorspace=NA,
+    ggsci=list(10,list(category10=10,category20=20,
+                       category20b=20,category20c=20),
+               12,12,list(default=51,alternating=2),
+               7,10,9,7,10,8,10,12,16,7,7,9,26),
+    r1980=r1980nx,
+    nord=NA,
+    rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
+  )
+  names(maxnumlist$ggsci) <- ggsci_func_names
+  names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
+  
+  observeEvent(input$package,{
+    updatePickerInput(session,'palette',
+                      choices=palettelist[input$package][[1]])})
+  observeEvent(input$palette,{
+    if(input$palette %in% toupper(moreopt)){
+      updateSelectInput(session,'option',
+                        choices=optlist4[paste0("pal_", tolower(input$palette))][[1]])
+    }else{
+      updateSelectInput(session,'option',
+                        choices="None")
+    }
+  })
+  
   output$visplot <- renderPlot({
     plottype <- input$plottype
     my_theme <- list(
-      ggtitle("Diamonds"),
       theme_classic(),
       theme(text = element_text(size = 16),
             axis.line = element_line(colour = "grey70", 
                                      size = 2, linetype = "solid")))
     
     if(input$colorOrpalette=="pl"){
-      r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
-      r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
-      palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
-                          canva=unique(c("Shades of citrus",sort(names(canva_palettes)))),
-                          colorspace=rownames(data.frame(hcl_palettes())),
-                          ggsci=toupper(matrix(unlist(strsplit(ls("package:ggsci")[1:18],split="_")),ncol=2,byrow=T)[,2]),
-                          ghibli=names(ghibli_palettes),
-                          r1980=r1980_func_names,
-                          nord=names(nord_palettes),
-                          rcolorbrewer=rownames(brewer.pal.info))
       
-      ggsci_func_names <- ls("package:ggsci")[1:18]
-      fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
-      opt.list <- sapply(ggsci_func_names, FUN=fx)
-      optlist4 <- opt.list[paste0("pal_",moreopt <- c("d3","igv","material","uchicago"))]
-      maxnumlist <- list(
-        baser=NA,
-        canva=4,
-        colorspace=NA,
-        ggsci=list(10,list(category10=10,category20=20,
-                           category20b=20,category20c=20),
-                   12,12,list(default=51,alternating=2),
-                   7,10,9,7,10,8,10,12,16,7,7,9,26),
-        r1980=r1980nx,
-        nord=NA,
-        rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
-      )
-      names(maxnumlist$ggsci) <- ggsci_func_names
-      names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
       
-      observeEvent(input$package,{
-        updatePickerInput(session,'palette',
-                          choices=palettelist[input$package][[1]])})
-      observeEvent(input$palette,{
-        if(input$palette %in% toupper(moreopt)){
-          updateSelectInput(session,'option',
-                            choices=optlist4[paste0("pal_", tolower(input$palette))][[1]])
-        }else{
-          updateSelectInput(session,'option',
-                            choices="None")
-        }
-      })
     ncol <- input$visnumcol
     maxnumcol <- NA
     if(input$package=="baser"){
@@ -892,11 +893,6 @@ server <- function(input, output, session) {
     if(nncol < ncol){
       col <- colorRampPalette(col)(ncol)
     }
-    if(plottype=="histogram"){
-      updateSliderInput(session, "visnumcol", max=4)
-    }else{
-      updateSliderInput(session, "visnumcol", max=7)
-    }
     output$maxnum.message <- renderUI({
       outm <- NULL
       if(!is.na(maxnumcol)){
@@ -934,7 +930,9 @@ server <- function(input, output, session) {
       out <- ggplot(data=subset(diamonds,color %in% levels(diamonds$color)[1:ncol]),
                     aes(cut))+
         geom_bar(aes(fill=color), position=position_dodge())+
-        scale_fill_manual(values=col)+my_theme
+        scale_fill_manual("Color",values=col)+my_theme+
+        ggtitle("Diamonds Cut & Color")+xlab("Cut")+
+        ylab("Count")
       
     }else
       if(plottype=="boxplot"){
@@ -949,19 +947,24 @@ server <- function(input, output, session) {
         geom_boxplot(notch=T)+
         scale_y_log10()+
         scale_x_discrete("Carat", labels=c(expression("Carat" <= "0.7"), "Carat > 0.7"))+
-        scale_fill_manual(values=col)+
-        scale_color_manual(values=darken(col, 0.4))+my_theme
+        scale_fill_manual("Clarity",values=col)+
+        scale_color_manual("Clarity",values=darken(col, 0.4))+my_theme+
+        ggtitle("Diamonds Price by Carat and Clarity")+xlab("Carat")+
+        ylab("Price")
       
     }else 
       if(plottype=="histogram"){
-      diamondsN <- diamonds %>% add_column(Carat=cut(diamonds$carat, breaks=c(-Inf, 0.4, 0.7, 1, Inf)))
+      diamondsN <- diamonds %>% add_column(Carat=cut(diamonds$carat, breaks=c(-Inf, 0.4, 0.5, 0.7, 1, 1.5, 2, Inf)))
+      caratlabel = c(expression(""<=0.4), "0.4~0.5", "0.5~0.7", "0.7~1.0", "1.0~1.5", "1.5~2.0",expression("">2.0))
       out <- ggplot(data=subset(diamondsN, Carat %in% levels(diamondsN$Carat)[1:ncol]),
                     aes(price, fill=Carat, color=Carat))+
-        geom_histogram(aes(y=..density..), position="identity", alpha=0.2, bins=50, size=1)+
+        geom_histogram(aes(y=..density..), position="identity", alpha=0.2, bins=70, size=1)+
         geom_density(adjust=2,aes(color=Carat),alpha=0.5)+
         scale_x_log10()+
-        scale_fill_manual(values=col,labels = c(expression(""<=0.4), "0.4~0.7", "0.7~1.0",expression("">1.0)))+
-        scale_color_manual(values=col,labels = c(expression(""<=0.4), "0.4~0.7", "0.7~1.0",expression("">1.0)))+my_theme
+        scale_fill_manual("Carat",values=col,labels = caratlabel)+
+        scale_color_manual("Carat",values=col,labels = caratlabel)+my_theme+
+        ggtitle("Diamonds Distribution of Price by Carat")+xlab("Price")+
+        ylab("Density")
       
     }else 
       if(plottype=="scatterplot"){
