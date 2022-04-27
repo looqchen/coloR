@@ -19,6 +19,9 @@ library(nord)
 library(dichromat)
 library(gcookbook)
 library(maps)
+library(ochRe)
+library(palettetown)
+library(Polychrome)
 }
 
 ui <- fluidPage(  
@@ -87,6 +90,9 @@ ui <- fluidPage(
                                                   "GHIBLI"="ghibli",
                                                   "NineteenEightyR"="r1980",
                                                   "NORD"="nord",
+                                                  "ochRe"="ochre",
+                                                  "Pokemon (palettetown)"="palettetown",
+                                                  "Polychrome"="polychrome",
                                                   "RColorBrewer"="rcolorbrewer"),
                                         selected="canva"),
                             pickerInput(
@@ -161,7 +167,7 @@ ui <- fluidPage(
                       navlistPanel(
                         "Packages",
                         
-                        tabPanel("Base R",
+                        tabPanel("Base R",icon=icon("r-project"),
                                  {fluidRow(
                                    column(4,
                                           strong("Color palettes in base R"),
@@ -175,7 +181,7 @@ ui <- fluidPage(
                                           plotlyOutput("cpPlot", height="250px")
                                    ))}),
                         
-                        tabPanel("CANVA",
+                        tabPanel("CANVA",icon=icon("paint-roller"),
                                  {fluidRow(
                                    column(4,
                                           p(strong("Canva Palettes"), br(), "These are 150 ", strong("four-color"), ' palettes by the ', a(href = 'canva.com', 'canva.com',.noWS = "outside"), ' design school and available with the ', code("ggthemes"), " package.", .noWS = c("after-begin", "before-end"))),
@@ -187,7 +193,7 @@ ui <- fluidPage(
                                  )},
                                  plotOutput("canva_plot", height="800px"),value="canva"),
                         
-                        tabPanel("ColorSpace",
+                        tabPanel("ColorSpace",icon=icon("draw-polygon"),
                                  {# div(style="display:inline-block",actionButton("cs_all",label="All",style="font-size: 110%;")),
                                    fluidRow(style="font-size: 110%; padding-left: 15px;",
                                             prettyRadioButtons("cs_choose", 
@@ -216,7 +222,7 @@ ui <- fluidPage(
                                  plotOutput("colorspaceplot", height = "500px")
                         ),
                         
-                        tabPanel("GGSCI",
+                        tabPanel("GGSCI",icon=icon("flask"),
                                  {fluidRow(
                                    column(4,
                                           sliderInput("ggsci_numcol",
@@ -231,7 +237,7 @@ ui <- fluidPage(
                                  )},
                                  plotOutput("ggsci_plot", height="500px")),
                         
-                        tabPanel("GHIBLI",
+                        tabPanel("GHIBLI",icon=icon("redhat"),
                                  {fluidRow(
                                    column(4,
                                           sliderInput("ghibli_numcol",
@@ -248,7 +254,7 @@ ui <- fluidPage(
                                  )},
                                  plotOutput("ghibli_plot")),
                         
-                        tabPanel("NineteenEightyR",
+                        tabPanel("NineteenEightyR",icon=icon("video"),
                                  {fluidRow(
                                    column(4,
                                           p(strong("NineteenEightyR Palettes"), br(), "Colors inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a develomental version and can be installed via ", br(), code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end"))),
@@ -260,7 +266,7 @@ ui <- fluidPage(
                                  )},
                                  plotOutput("r1980_plot", height="450px")),
                         
-                        tabPanel("NORD",
+                        tabPanel("NORD",icon=icon("icicles"),
                                  {fluidRow(
                                    column(4,
                                           sliderInput("nord_numcol",
@@ -273,7 +279,61 @@ ui <- fluidPage(
                                             <code>nord(palette = 'baie_mouton', n = 7, alpha=0.8)</code>")))},
                                  plotOutput("nord_plot")),
                         
-                        tabPanel("RColorBrewer",
+                        tabPanel("ochRe",icon=icon("water"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("ochRe Palettes"), br(), "A collection of colour palettes inspired by the landscape and wildlife of Australia.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(ochRe)</code><br>
+                                            <code>ochre_pal()(10)</code><br>
+                                            <code>ochre_pal(palette= 'jumping_frog', alpha=0.8)(4)</code>"))
+                                 )},
+                                 plotOutput("ochre_plot", height="450px")),
+                        
+                        tabPanel("Pokemon",icon=icon("dot-circle"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("Pokemon Palettes"), br(), "386 Pokemon color palettes inspired by ", a(href="https://pokepalettes.com","pokepalettes"), ".", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(palettetown)</code><br>
+                                            <code>pokepal(pokemon=28)</code><br>
+                                            <code>pokepal(pokemon='pikachu', spread=10)</code>"))
+                                 )},
+                                 {radioGroupButtons(
+                                   inputId = "pokegroup",
+                                   label = "Display palettes",
+                                   choices = c("Default 10"=1,
+                                               "1-50"=2,
+                                               "51-100"=3,
+                                               "101-150"=4,
+                                               "151-200"=5,
+                                               "201-250"=6,
+                                               "251-300"=7,
+                                               "301-350"=8,
+                                               "351-386"=9
+                                   ),
+                                   status = "primary",
+                                   checkIcon = list(
+                                     yes = tags$i(class = "fa fa-check-circle"),
+                                     no = tags$i(class = "fa fa-circle-o"))
+                                 )},
+                                 plotOutput("poke_plot")),
+                        
+                        tabPanel("Polychrome",icon=icon("dharmachakra"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("Polychrome Palettes"), br(), "8 palettes with distinguishable colors.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(Polychrome)</code><br>
+                                            <code>kelly.colors(n=4)</code><br>
+                                            <code>alphabet.colors(n=26)</code>"))
+                                 )},
+                                 plotOutput("poly_plot")),
+                        
+                        tabPanel("RColorBrewer",icon=icon("fill-drip"),
                                  {fluidRow(
                                    column(5,
                                           
@@ -312,12 +372,11 @@ ui <- fluidPage(
                                    column(7,
                                           plotOutput("rcb_plot", height="500px"))
                                  )}),
+                        
                         tabPanel("...More to come...",
                                  hr(),
                                  strong("More palettes to come:"),
                                  tags$ul(
-                                   tags$li("ochRe"),
-                                   tags$li("palettetown"),
                                    tags$li("Polychrome"),
                                    tags$li("quickoalette"),
                                    tags$li("rcartocolor"),
@@ -328,8 +387,7 @@ ui <- fluidPage(
                                  ),
                                  hr()
                         ),
-                        #tabPanel("Component 8"),
-                        #tabPanel("Component 9"),
+                        
                         #tabPanel("Component 10"),
                         #tabPanel("Component 11"),
                         #tabPanel("Component 12"),
@@ -374,7 +432,11 @@ ui <- fluidPage(
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/ggsci/vignettes/ggsci.html","GGSCI"),": 42 scientific journal and sci-fi themed palettes, ", code("install.packages('ggsci')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/ghibli/vignettes/ghibli.html","GHIBLI"),": 27 palettes inspired by ", a(href="https://en.wikipedia.org/wiki/Studio_Ghibli","Studio Ghibli"), " films, ", code("install.packages('ghibli')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://github.com/m-clark/NineteenEightyR","NineteenEightyR"),": 12 palettes inspired by Sonny Crockett, Malibu, Miami, the movie Cobra, and more. This is a developmental version and can be installed via", code("devtools::install_github('m-clark/NineteenEightyR')"), .noWS = c("after-begin", "before-end")),
+                                                         
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/nord/readme/README.html","NORD"),": 16 arctic, north-bluish color palettes, ", code("install.packages('nord')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://ropensci.org/blog/2017/11/21/ochre/","ochRe"),": 16 color palettes inspired by the landscape and wildlife of Australia, ", code("install.packages('ochre')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://github.com/timcdlucas/palettetown","Pokemon"),": 386 Pokemon color palettes inspired by ", a(href="https://pokepalettes.com","pokepalettes"), ", ", code("install.packages('palettetown')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html","Polychrome"),": 8 color palettes with distinguishable colors", code("install.packages('Polychrome')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
                                                        ))), 
                          tags$li(strong("Visualization"),
@@ -791,7 +853,120 @@ server <- function(input, output, session) {
             plot.margin=unit(c(0,0,0,0), "mm"))
   })
   
+  output$ochre_plot <- renderPlot({
+    ny <- length(ochre_palettes)
+    nx <- sapply(ochre_palettes, FUN=length)
+    ochredf <- data.frame(y=c((ny/2):1,(ny/2):1),
+                          x=0.5,
+                          Palette=names(ochre_palettes),
+                          wrap=rep(1:2,each=ny/2))
+    yy <- unlist(apply(data.frame(ny:1,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ww <- (yy<=8)+1
+    yy[yy>8] <- yy[yy>8]-8
+    nxfun <- function(x){
+      if(x >= 10){
+        out <- (1:x)/2+0.25
+      }else{
+        out <- 1:x
+      }
+      out
+    }
+    wid <- unlist(sapply(nx, FUN=function(x) (x<10)/2+0.5))
+    ggochredf <- data.frame(y=yy,
+                            x=unlist(sapply(nx, FUN=nxfun)),
+                            Width=unlist(apply(data.frame(wid,nx),1,FUN=function(x) rep(x[1],x[2]))),
+                            Color=unlist(ochre_palettes),
+                            wrap=ww)
+    
+    ggplot(ggochredf, aes(x=x,y=y))+
+      geom_tile(aes(width=Width,fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=ochredf,label=ochredf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
+  pokeHeight <- reactive({
+    pokegroup <- as.numeric(input$pokegroup)
+    c(400,900)[(pokegroup>1)+1]
+  })
+  
+  mypokemon <- function(){pokeColours}
+  environment(mypokemon) <- asNamespace('palettetown')
+  output$poke_plot <- renderPlot({
+    pokeindex <- list(c(6,17,114,137,156,191,193,283,311,318),
+                      1:50, 51:100, 101:150, 151:200, 201:250, 251:300, 301:350, 351:386)
+    mypoke <- mypokemon()
+    names(mypoke) <- paste0(1:386, ".", names(mypoke))
+    ggfunc <- function(index){
+      pokepalette <- mypoke[index]
+      ny <- length(index)
+      nx <- sapply(pokepalette, FUN=length)
+      pokedf <- data.frame(y=c((ny/2):1,(ny/2):1),
+                           x=0.5,
+                           Palette=names(pokepalette),
+                           wrap=rep(1:2,each=ny/2))
+      yy <- unlist(apply(data.frame(pokedf$y,nx),1,FUN=function(x) rep(x[1],x[2])))
+      ww <- unlist(apply(data.frame(pokedf$wrap,nx),1,FUN=function(x) rep(x[1],x[2])))
+      ggpokedf <- data.frame(y=yy,
+                              x=unlist(sapply(nx, FUN=function(x) 1:x)),
+                              Color=unlist(pokepalette),
+                              wrap=ww)
+      ggplot(ggpokedf, aes(x=x,y=y))+
+        geom_tile(aes(fill=Color),height=0.6)+
+        scale_fill_identity()+
+        facet_wrap(~wrap)+
+        geom_text(data=pokedf,label=pokedf$Palette,hjust=0, nudge_y=0.5, size=5)+
+        theme(legend.position = "none",
+              line = element_blank(),
+              axis.text = element_blank(),
+              title = element_blank(),
+              strip.background = element_blank(),
+              strip.text.x = element_blank(),
+              panel.background = element_rect(fill="transparent"),
+              plot.background = element_rect(fill="transparent"),
+              plot.margin=unit(c(0,0,0,0), "mm"))
+    }
+    ggfunc(pokeindex[[as.numeric(input$pokegroup)]])
+  }, height=pokeHeight, units="px")
+  
+  polyfuncall <- ls("package:Polychrome")
+  polyfuncnames <- polyfuncall[which(!is.na(str_match(polyfuncall, "[.]")))]
+  output$poly_plot <- renderPlot({
+    nx <- sapply(polyfuncnames, FUN=function(x) as.list(args(x))$n)
+    ny <- length(polyfuncnames)
+    polydf <- data.frame(y=ny:1,
+                         x=0.5,
+                         Palette=polyfuncnames)
+    yy <- unlist(apply(data.frame(polydf$y,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ggpolydf <- data.frame(y=yy,
+                           x=unlist(sapply(nx, FUN=function(x) 1:x)),
+                           Color=as.character(unlist(sapply(polyfuncnames, FUN=function(x) get(x)()))))
+    ggplot(ggpolydf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      geom_text(data=polydf,label=polydf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
   ##Visualization
+  {
   r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
   r1980nx <- sapply(r1980_func, FUN=function(x) as.list(args(x))$n)
   palettelist <- list(baser=c("rainbow", "heat.colors", "terrain.colors", "topo.colors", "cm.colors"),
@@ -801,6 +976,9 @@ server <- function(input, output, session) {
                       ghibli=names(ghibli_palettes),
                       r1980=r1980_func_names,
                       nord=names(nord_palettes),
+                      ochre=names(ochre_palettes),
+                      palettetown=paste0(1:386, ".", names(mypokemon())),
+                      polychrome=polyfuncnames,
                       rcolorbrewer=rownames(brewer.pal.info))
   
   ggsci_func_names <- ls("package:ggsci")[1:18]
@@ -817,6 +995,9 @@ server <- function(input, output, session) {
                7,10,9,7,10,8,10,12,16,7,7,9,26),
     r1980=r1980nx,
     nord=NA,
+    ochre=NA,
+    palettetown=sapply(mypokemon(),FUN=length),
+    polychrome=sapply(polyfuncnames, FUN=function(x) as.list(args(x))$n),
     rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
   )
   names(maxnumlist$ggsci) <- ggsci_func_names
@@ -834,6 +1015,7 @@ server <- function(input, output, session) {
                         choices="None")
     }
   })
+  }
   
   output$visplot <- renderPlot({
     plottype <- input$plottype
@@ -884,6 +1066,18 @@ server <- function(input, output, session) {
       if(input$package=="nord"){
       col <- nord(palette=input$palette, n=ncol)
     }else 
+      if(input$package=="ochre"){
+        col <- ochre_pal(palette = input$palette)(ncol)
+      }else
+      if(input$package=="palettetown"){
+        inpal <- strsplit(input$palette,".",fixed=T)[[1]][2]
+        col <- pokepal(pokemon = inpal, spread=ncol)
+        maxnumcol <- maxnumlist$palettetown[inpal]
+      }else
+        if(input$package=="polychrome"){
+          col <- as.character(get(input$palette)(n=ncol))
+          maxnumcol <- maxnumlist$polychrome[input$palette]
+        }else
       if(input$package=="rcolorbrewer"){
       col <- brewer_pal(palette=input$palette)(ncol)
       maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
