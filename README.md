@@ -1,5 +1,5 @@
 # coloR
-Welcome to [coloR](https://luchen.shinyapps.io/coloR/) !
+Welcome to [coloR](https://luchen.shinyapps.io/coloR/)!
 
 This Shiny App intends to provide an comprehensive list of existing colors and palettes in R to help color picking in data visualization. It is in development and new contents are added everyday.
 
