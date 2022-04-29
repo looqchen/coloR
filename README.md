@@ -34,6 +34,7 @@ This section includes popular color palettes packages available in R. They are
   * [ochRe](https://ropensci.org/blog/2017/11/21/ochre/): 16 color palettes inspired by the landscape and wildlife of Australia, `install.packages('ochre')`
   * [Pokemon](https://github.com/timcdlucas/palettetown): 386 Pokemon color palettes inspired by [pokepalettes](https://pokepalettes.com/), `install.packages('palettetown')`
   * [Polychrome](https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html): 8 color palettes with distinguishable colors, `install.packages('Polychrome')`
+  * [rCARTOcolor](https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html): 34 palettes created by [CARTO](http://carto.com/) for color use on maps, install.packages('rcartocolor')
   * [RColorBrewer](https://cran.r-project.org/web/packages/RColorBrewer/index.html): 35 palettes, `install.packages('RColorBrewer')`
 
 ## Color Names
