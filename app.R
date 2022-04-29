@@ -22,6 +22,8 @@ library(maps)
 library(ochRe)
 library(palettetown)
 library(Polychrome)
+library(rcartocolor)
+#library(Redmonder)
 }
 
 ui <- fluidPage(  
@@ -93,6 +95,7 @@ ui <- fluidPage(
                                                   "ochRe"="ochre",
                                                   "Pokemon (palettetown)"="palettetown",
                                                   "Polychrome"="polychrome",
+                                                  "rCARTOcolor"="rcartocolor",
                                                   "RColorBrewer"="rcolorbrewer"),
                                         selected="canva"),
                             pickerInput(
@@ -333,6 +336,18 @@ ui <- fluidPage(
                                  )},
                                  plotOutput("poly_plot")),
                         
+                        tabPanel("rCARTOcolor",icon=icon("map-marker-alt"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("CARTO Palettes"), br(), "34 palettes created by ", a(href="http://carto.com","CARTO"), ", a set of custom color palettes built on top of well-known standards for color use on maps.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(rcartocolor)</code><br>
+                                            <code>carto_pal(n=5, name='Teal')</code><br>
+                                            <code>carto_pal(n=10, name='Safe')</code>"))
+                                 )},
+                                 plotOutput("carto_plot", height="650px")),
+                        
                         tabPanel("RColorBrewer",icon=icon("fill-drip"),
                                  {fluidRow(
                                    column(5,
@@ -377,9 +392,6 @@ ui <- fluidPage(
                                  hr(),
                                  strong("More palettes to come:"),
                                  tags$ul(
-                                   tags$li("Polychrome"),
-                                   tags$li("quickoalette"),
-                                   tags$li("rcartocolor"),
                                    tags$li("redmonder"),
                                    tags$li("RSkittleBrewer"),
                                    tags$li("wesanderson"),
@@ -437,6 +449,7 @@ ui <- fluidPage(
                                                          tags$li(a(href="https://ropensci.org/blog/2017/11/21/ochre/","ochRe"),": 16 color palettes inspired by the landscape and wildlife of Australia, ", code("install.packages('ochre')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://github.com/timcdlucas/palettetown","Pokemon"),": 386 Pokemon color palettes inspired by ", a(href="https://pokepalettes.com","pokepalettes"), ", ", code("install.packages('palettetown')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html","Polychrome"),": 8 color palettes with distinguishable colors", code("install.packages('Polychrome')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html","rCARTOcolor"),": 34 palettes created by ", a(href="http://carto.com","CARTO"), " for color use on maps,", code("install.packages('rcartocolor')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
                                                        ))), 
                          tags$li(strong("Visualization"),
@@ -965,6 +978,46 @@ server <- function(input, output, session) {
             plot.margin=unit(c(0,0,0,0), "mm"))
   })
   
+  output$carto_plot <- renderPlot({
+    ny <- nrow(cartocolors)
+    nx <- metacartocolors$Max_n
+    cartodf <- data.frame(y=c((ny/2):1,(ny/2):1),
+                          x=0.5,
+                          Palette=cartocolors$Name,
+                          wrap=rep(1:2,each=ny/2))
+    yy <- unlist(apply(data.frame(cartodf$y,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ww <- unlist(apply(data.frame(cartodf$wrap,nx),1,FUN=function(x) rep(x[1],x[2])))
+    nxfun <- function(x){
+      if(x >= 10){
+        out <- (1:x)*7/12+0.5-7/24
+      }else{
+        out <- 1:x
+      }
+      out
+    }
+    wid <- unlist(sapply(nx, FUN=function(x) -(x>10)*5/12+1))
+    ggcartodf <- data.frame(y=yy,
+                            x=unlist(sapply(nx, FUN=nxfun)),
+                            Width=unlist(apply(data.frame(wid,nx),1,FUN=function(x) rep(x[1],x[2]))),
+                            Color=as.character(unlist(apply(data.frame(cartocolors,nx),1,FUN=function(x) x[x$nx+1]))),
+                            wrap=ww)
+    
+    ggplot(ggcartodf, aes(x=x,y=y))+
+      geom_tile(aes(width=Width,fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=cartodf,label=cartodf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
   ##Visualization
   {
   r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
@@ -979,6 +1032,7 @@ server <- function(input, output, session) {
                       ochre=names(ochre_palettes),
                       palettetown=paste0(1:386, ".", names(mypokemon())),
                       polychrome=polyfuncnames,
+                      rcartocolor=cartocolors$Name,
                       rcolorbrewer=rownames(brewer.pal.info))
   
   ggsci_func_names <- ls("package:ggsci")[1:18]
@@ -998,10 +1052,12 @@ server <- function(input, output, session) {
     ochre=NA,
     palettetown=sapply(mypokemon(),FUN=length),
     polychrome=sapply(polyfuncnames, FUN=function(x) as.list(args(x))$n),
+    rcartocolor=metacartocolors$Max_n,
     rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
   )
   names(maxnumlist$ggsci) <- ggsci_func_names
   names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
+  names(maxnumlist$rcartocolor) <- metacartocolors$Name
   
   observeEvent(input$package,{
     updatePickerInput(session,'palette',
@@ -1074,13 +1130,21 @@ server <- function(input, output, session) {
         col <- pokepal(pokemon = inpal, spread=ncol)
         maxnumcol <- maxnumlist$palettetown[inpal]
       }else
-        if(input$package=="polychrome"){
+      if(input$package=="polychrome"){
           col <- as.character(get(input$palette)(n=ncol))
           maxnumcol <- maxnumlist$polychrome[input$palette]
-        }else
+      }else
+      if(input$package=="rcartocolor"){
+          if(ncol==2){
+            col <- carto_pal(n=3, name=input$palette)[1:2]
+          }else if(ncol>2){
+            col <- carto_pal(n=ncol, name=input$palette)
+          }
+          maxnumcol <- maxnumlist$rcartocolor[input$palette]
+      }else
       if(input$package=="rcolorbrewer"){
-      col <- brewer_pal(palette=input$palette)(ncol)
-      maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
+          col <- brewer_pal(palette=input$palette)(ncol)
+          maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
       }
     col <- col[!is.na(col)]
     nncol <- length(col)
