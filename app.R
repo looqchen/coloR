@@ -23,7 +23,8 @@ library(ochRe)
 library(palettetown)
 library(Polychrome)
 library(rcartocolor)
-#library(Redmonder)
+library(Redmonder)
+library(RSkittleBrewer)
 }
 
 ui <- fluidPage(  
@@ -96,7 +97,9 @@ ui <- fluidPage(
                                                   "Pokemon (palettetown)"="palettetown",
                                                   "Polychrome"="polychrome",
                                                   "rCARTOcolor"="rcartocolor",
-                                                  "RColorBrewer"="rcolorbrewer"),
+                                                  "RColorBrewer"="rcolorbrewer",
+                                                  "Redmonder"="redmonder",
+                                                  "RSkittleBrewer"="rskittlebrewer"),
                                         selected="canva"),
                             pickerInput(
                               inputId = "palette",
@@ -388,24 +391,38 @@ ui <- fluidPage(
                                           plotOutput("rcb_plot", height="500px"))
                                  )}),
                         
+                        tabPanel("Redmonder",icon=icon("microsoft"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("Redmonder Palettes"), br(), "41 palettes based on color schemes inspired by Microsoft(r) applications.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(Redmonder)</code><br>
+                                            <code>redmonder.pal(n=11, name='dPBIYlBu')</code><br>
+                                            <code>redmonder.pal(n=4, name='sPBIPu')</code>"))
+                                 )},
+                                 plotOutput("red_plot", height="750px")),
+                        tabPanel("RSkittleBrewer",icon=icon("candy-cane"),
+                                 {fluidRow(
+                                   column(4,
+                                          p(strong("RSkittleBrewer Palettes"), br(), "5 candy-based color palettes.", .noWS = c("after-begin", "before-end"))),
+                                   column(8,
+                                          HTML("<b>R codes</b><br>
+                                            <code>library(RSkittleBrewer)</code><br>
+                                            <code>RSkittleBrewer(flavor = 'wildberry')</code><br>
+                                            <code>RSkittleBrewer(flavor = 'M&M')</code>"))
+                                 )},
+                                 plotOutput("skittle_plot")),
+                        
                         tabPanel("...More to come...",
                                  hr(),
                                  strong("More palettes to come:"),
                                  tags$ul(
-                                   tags$li("redmonder"),
-                                   tags$li("RSkittleBrewer"),
                                    tags$li("wesanderson"),
                                    tags$li("yarr")
                                  ),
                                  hr()
                         ),
-                        
-                        #tabPanel("Component 10"),
-                        #tabPanel("Component 11"),
-                        #tabPanel("Component 12"),
-                        #tabPanel("Component 13"),
-                        #tabPanel("Component 14"),
-                        #tabPanel("Component 15"),
                         well=T, widths=c(2,10)#,selected = "canva"
                       )),
              
@@ -450,7 +467,9 @@ ui <- fluidPage(
                                                          tags$li(a(href="https://github.com/timcdlucas/palettetown","Pokemon"),": 386 Pokemon color palettes inspired by ", a(href="https://pokepalettes.com","pokepalettes"), ", ", code("install.packages('palettetown')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html","Polychrome"),": 8 color palettes with distinguishable colors", code("install.packages('Polychrome')"), .noWS = c("after-begin", "before-end")),
                                                          tags$li(a(href="https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html","rCARTOcolor"),": 34 palettes created by ", a(href="http://carto.com","CARTO"), " for color use on maps,", code("install.packages('rcartocolor')"), .noWS = c("after-begin", "before-end")),
-                                                         tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end"))
+                                                         tags$li(a(href="https://cran.r-project.org/web/packages/RColorBrewer/index.html","RColorBrewer"),": 35 palettes, ", code("install.packages('RColorBrewer')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://www.pedroinnecco.com/projects/redmonder/","Redmonder"),": 41 palettes based on color schemes inspired by Microsoft(r) applications,", code("install.packages('Redmonder')"), .noWS = c("after-begin", "before-end")),
+                                                         tags$li(a(href="https://github.com/alyssafrazee/RSkittleBrewer","RSkittleBrewer"),": 5 candy-based color palettes,", code("devtools::install_github('alyssafrazee/RSkittleBrewer')"), .noWS = c("after-begin", "before-end"))
                                                        ))), 
                          tags$li(strong("Visualization"),
                                  p("This section allows you to visualize a color palette or a set of colors of your choice in different", strong("plot types"),.noWS = c("after-begin", "before-end")),
@@ -473,6 +492,10 @@ ui <- fluidPage(
                        hr()
              )},
              
+             tags$style(type="text/css",
+                        ".shiny-output-error { visibility: hidden; }",
+                        ".shiny-output-error:before { visibility: hidden; }"
+             ),
              tags$style({HTML(".navbar-brand {display:none;}
                     .navbar-default {
                         background: -webkit-linear-gradient(left, #FFAEB9, #EEEE00, #53868B);
@@ -1018,6 +1041,65 @@ server <- function(input, output, session) {
             plot.margin=unit(c(0,0,0,0), "mm"))
   })
   
+  output$red_plot <- renderPlot({
+    ny <- nrow(redmonder.pal.info)
+    nx <- redmonder.pal.info$maxcolors
+    reddf <- data.frame(y=c(ceiling(ny/2):1,ceiling(ny/2):2),
+                          x=0.5,
+                          Palette=rownames(redmonder.pal.info),
+                          wrap=rep(1:2,each=ceiling(ny/2))[-42])
+    yy <- unlist(apply(data.frame(reddf$y,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ww <- unlist(apply(data.frame(reddf$wrap,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ggreddf <- data.frame(y=yy,
+                          x=unlist(sapply(nx, FUN=function(x) 1:x)),
+                          Color=unlist(apply(data.frame(rownames(redmonder.pal.info),redmonder.pal.info), 1, FUN=function(x) redmonder.pal(n=as.numeric(x[2]),name=x[1]))),
+                          wrap=ww)
+    
+    ggplot(ggreddf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      facet_wrap(~wrap)+
+      geom_text(data=reddf,label=reddf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
+  skittleflavor <- c("original", "tropical", "wildberry", "M&M", "smarties")
+  skittlecolor <- sapply(skittleflavor,FUN=function(x) RSkittleBrewer(flavor=x))
+  skittlemax <- sapply(skittlecolor, FUN=length)
+  output$skittle_plot <- renderPlot({
+    ny <- length(skittleflavor)
+    nx <- skittlemax
+    skittledf <- data.frame(y=ny:1,
+                            x=0.5,
+                            Palette=skittleflavor)
+    yy <- unlist(apply(data.frame(skittledf$y,nx),1,FUN=function(x) rep(x[1],x[2])))
+    ggskittledf <- data.frame(y=yy,
+                            x=unlist(sapply(nx, FUN=function(x) 1:x)),
+                            Color=unlist(skittlecolor))
+    
+    ggplot(ggskittledf, aes(x=x,y=y))+
+      geom_tile(aes(fill=Color),height=0.6)+
+      scale_fill_identity()+
+      geom_text(data=skittledf,label=skittledf$Palette,hjust=0, nudge_y=0.5, size=5)+
+      theme(legend.position = "none",
+            line = element_blank(),
+            axis.text = element_blank(),
+            title = element_blank(),
+            strip.background = element_blank(),
+            strip.text.x = element_blank(),
+            panel.background = element_rect(fill="transparent"),
+            plot.background = element_rect(fill="transparent"),
+            plot.margin=unit(c(0,0,0,0), "mm"))
+  })
+  
   ##Visualization
   {
   r1980_func <- sapply(r1980_func_names <- ls("package:NineteenEightyR"), FUN=get)
@@ -1033,7 +1115,9 @@ server <- function(input, output, session) {
                       palettetown=paste0(1:386, ".", names(mypokemon())),
                       polychrome=polyfuncnames,
                       rcartocolor=cartocolors$Name,
-                      rcolorbrewer=rownames(brewer.pal.info))
+                      rcolorbrewer=rownames(brewer.pal.info),
+                      redmonder=rownames(redmonder.pal.info),
+                      rskittlebrewer=skittleflavor)
   
   ggsci_func_names <- ls("package:ggsci")[1:18]
   fx <- function(x) as.character(as.list(args(get(x)))$palette)[-1]
@@ -1053,7 +1137,9 @@ server <- function(input, output, session) {
     palettetown=sapply(mypokemon(),FUN=length),
     polychrome=sapply(polyfuncnames, FUN=function(x) as.list(args(x))$n),
     rcartocolor=metacartocolors$Max_n,
-    rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18))
+    rcolorbrewer=c(rep(11,9),8,8,12,9,8,9,8,12,rep(9,18)),
+    redmonder=redmonder.pal.info[1],
+    rskittlebrewer=skittlemax
   )
   names(maxnumlist$ggsci) <- ggsci_func_names
   names(maxnumlist$rcolorbrewer) <- rownames(brewer.pal.info)
@@ -1061,7 +1147,8 @@ server <- function(input, output, session) {
   
   observeEvent(input$package,{
     updatePickerInput(session,'palette',
-                      choices=palettelist[input$package][[1]])})
+                      choices=palettelist[input$package][[1]])
+    })
   observeEvent(input$palette,{
     if(input$palette %in% toupper(moreopt)){
       updateSelectInput(session,'option',
@@ -1082,8 +1169,7 @@ server <- function(input, output, session) {
                                      size = 2, linetype = "solid")))
     
     if(input$colorOrpalette=="pl"){
-      
-      
+
     ncol <- input$visnumcol
     maxnumcol <- NA
     if(input$package=="baser"){
@@ -1143,8 +1229,20 @@ server <- function(input, output, session) {
           maxnumcol <- maxnumlist$rcartocolor[input$palette]
       }else
       if(input$package=="rcolorbrewer"){
-          col <- brewer_pal(palette=input$palette)(ncol)
-          maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
+        col <- brewer_pal(palette=input$palette)(ncol)
+        maxnumcol <- maxnumlist$rcolorbrewer[input$palette][[1]]
+      }else
+      if(input$package=="redmonder"){
+        if(ncol < 3){
+          col <- redmonder.pal(n=3, name=input$palette)[1:2]
+        }else{
+          col <- redmonder.pal(n=ncol, name=input$palette)
+        }
+        maxnumcol <- redmonder.pal.info[1][input$palette,]
+      }else
+      if(input$package=="rskittlebrewer"){
+        col <- as.character(RSkittleBrewer(flavor=input$palette)[1:ncol])
+        maxnumcol <- maxnumlist$rskittlebrewer[input$palette]
       }
     col <- col[!is.na(col)]
     nncol <- length(col)
