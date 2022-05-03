@@ -36,6 +36,8 @@ This section includes popular color palettes packages available in R. They are
   * [Polychrome](https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html): 8 color palettes with distinguishable colors, `install.packages('Polychrome')`
   * [rCARTOcolor](https://cran.r-project.org/web/packages/Polychrome/vignettes/polychrome.html): 34 palettes created by [CARTO](http://carto.com/) for color use on maps, install.packages('rcartocolor')
   * [RColorBrewer](https://cran.r-project.org/web/packages/RColorBrewer/index.html): 35 palettes, `install.packages('RColorBrewer')`
+  * [Remonder](https://www.pedroinnecco.com/projects/redmonder/): 41 palettes based on color schemes inspired by Microsoft(r) applications, `install.packages('Redmonder')`
+  * [RSkittleBrewer](https://github.com/alyssafrazee/RSkittleBrewer): 35 palettes, `devtools::install_github('alyssafrazee/RSkittleBrewer')`
 
 ## Color Names
 This section lists 657 **built-in colors** in base R with their names, HEX codes, RGB and HSV values.
